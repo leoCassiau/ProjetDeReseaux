@@ -7,6 +7,7 @@ Serveur à lancer avant le client
 #include <sys/socket.h>
 #include <netdb.h> 		/* pour hostent, servent */
 #include <string.h> 		/* pour bcopy, ... */  
+#include <pthread.h>  // Parallelisation
 #define TAILLE_MAX_NOM 256
 
 typedef struct sockaddr sockaddr;
@@ -43,6 +44,16 @@ void renvoi (int sock) {
         
     return;
     
+}
+
+void * testThread(void * n) {
+    int * nouv_socket_descriptor = (int*) n;
+    /* traitement du message */
+    printf("reception d'un message.\n");
+
+    renvoi(*nouv_socket_descriptor);
+
+    close(*nouv_socket_descriptor);
 }
 /*------------------------------------------------------*/
 
@@ -122,18 +133,12 @@ main(int argc, char **argv) {
 			perror("erreur : impossible d'accepter la connexion avec le client.");
 			exit(1);
 		}
-		if (fork()==-1){
+        pthread_t * t;
+        // Compilation : gcc -o toto.exe server.c -lpthread
+        if(pthread_create(t,NULL, testThread,&nouv_socket_descriptor)) {
 			close(nouv_socket_descriptor);
 			continue;
 		}
-		else{
-		/* traitement du message */
-		printf("reception d'un message.\n");
-		
-		renvoi(nouv_socket_descriptor);
-						
-		close(nouv_socket_descriptor);
-	}
+        pthread_join(*t, NULL);
     }
-    
 }
