@@ -17,7 +17,7 @@ typedef struct  {
     int thread; //id du thread du client
 	bool isAlive; //
 	int rank; //Position du joueur dans la "ronde", premier arrivé premier servi, maj par les morts et deconnexions
-}joueur;
+}Joueur;
 
 bool bat(coup c1, coup c2) {
     if( ((c1 == pierre) && (c2 == ciseaux)) ||
@@ -28,19 +28,20 @@ bool bat(coup c1, coup c2) {
     return false;
 }
 
-bool attaque(joueur j1, joueur j2) {
+bool attaque(Joueur j1, Joueur j2) {
     if(bat(j1.c, j2.c)) {
         return true;
     }else
     return false;
 }
 
-bool defend(joueur j1, joueur j2) {
+bool defend(Joueur j1, Joueur j2) {
     if(bat(j2.c, j1.c)) {
         return true;
     }
     return false;
 }
+
 typedef enum Operation{
 	play,
 	report
@@ -49,7 +50,7 @@ typedef enum Operation{
 
 struct socketMain{
 	Operation op;
-	joueur player[];
+	Joueur player[];
 	
 };
 

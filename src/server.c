@@ -1,13 +1,18 @@
 /*----------------------------------------------
-Serveur Ã  lancer avant le client
+Serveur a  lancer avant le client
 ------------------------------------------------*/
+/*---------------------Notre code----------------------*/
+#include <shifumi.c>	// Struct Joueur
+#include <pthread.h>	// Parallelisation
+#include <stdbool.h>
+
+/*---------------------Code du prof--------------------*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <linux/types.h> 	/* pour les sockets */
 #include <sys/socket.h>
 #include <netdb.h> 		/* pour hostent, servent */
 #include <string.h> 		/* pour bcopy, ... */  
-#include <pthread.h>  // Parallelisation
 #define TAILLE_MAX_NOM 256
 
 typedef struct sockaddr sockaddr;
@@ -15,7 +20,14 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
-/*------------------------------------------------------*/
+/*---------------------Notre code----------------------*/
+#define NB_MAX_JOUEURS 256
+int nbJoueurs = 0;
+Joueur joueurs[NB_MAX_JOUEURS];
+int nbJoueursAlive;
+
+/*---------------------Code du prof--------------------*/
+/*
 void renvoi (int sock) {
 
     char buffer[256];
@@ -35,7 +47,7 @@ void renvoi (int sock) {
     
     printf("renvoi du message traite.\n");
 
-    /* mise en attente du prgramme pour simuler un delai de transmission */
+    // mise en attente du prgramme pour simuler un delai de transmission
     sleep(3);
     
     write(sock,buffer,strlen(buffer)+1);
@@ -44,6 +56,110 @@ void renvoi (int sock) {
         
     return;
     
+}
+*/
+
+/*---------------------Notre code----------------------*/
+bool nouveauJoueur(char[] pseudo) {
+
+	if(nbJoueurs >= NB_MAX_JOUEURS) {
+		//TODO On informe au client que le nb de joueur est au max
+		return false;
+	}
+
+	//Initialisation du nouveau joueur
+	Joueur j;
+	j.nom = pseudo;
+	j.score = 0;
+	j.isAlive = false;
+
+	//Ajout du nouveau joueur dans la liste
+	joueurs[nbJoueurs] = j;
+	++nbJoueurs;
+	j.rank = nbJoueurs;
+
+	//TODO Le client voit la partie en cours
+	return true;
+}
+
+void nouvellePartie() {
+	for(int i = 0 ; i < nbJoueurs ; i++) {
+		joueurs[i].isAlive = true;
+		// TODO dire au joueur de jouer
+	}
+	nbJoueursAlive = nbJoueurs;
+}
+
+void finPartie() {
+	if(nbJoueursAlive < 2) {
+		if(nbJoueursAlive == 0) {
+			//TODO On informe qu'il n'y a pas de gagnant
+		} else { //nbJoueursAlive = 1
+			for(int i = 0 ;  i < nbJoueurs ; i++) {
+				if(joueurs[i].isAlive) {
+					joueurs[i].score++;
+					// TODO Informer à tous le monde que joueurs[i] a gagné
+					return;
+				}
+			}
+		}
+
+	}
+}
+
+void nouveauTour() {
+	for(int i = 0 ; i < nbJoueurs ; i++) {
+		if(joueurs[i].isAlive) {
+			// TODO dire au joueur de jouer
+		} else {
+			// TODO Dire au joueur de patienter
+		}
+	}
+}
+
+// A lancer que quand tous les joueurs ont signaler leur coup (fin timer)
+void finTour() {
+	if(attaque(joueurs[nbJoueurs - 1], joueurs[0])) {
+		joueurs[0].isAlive = false;
+		nbJoueursAlive--;
+		// TODO On informe à joueurs[0] sa mort
+	}
+	for(int i = 1 ; i < nbJoueurs ; i++) {
+		if(attaque(joueurs[i], joueurs[i + 1])) {
+			joueurs[i + 1].isAlive = false;
+			nbJoueursAlive--;
+			// TODO On informe à joueurs[i+1] sa mort
+		}
+	}
+
+	finPartie();
+	nouvellePartie();
+}
+
+
+
+
+void renvoi (int sock) {
+
+    char buffer[256];
+    int longueur;
+
+    if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0)
+    	return;
+
+    printf("message lu : %s \n", buffer);
+
+    // TRAITEMENT ? A VOIR A QUOI RESSEMBLE BUFFER
+
+    printf("message apres traitement : %s \n", buffer);
+
+    printf("renvoi du message traite.\n");
+
+    write(sock,buffer,strlen(buffer)+1);
+
+    printf("message envoye. \n");
+
+    return;
 }
 
 void * testThread(void * n) {
@@ -55,7 +171,6 @@ void * testThread(void * n) {
 
     close(*nouv_socket_descriptor);
 }
-/*------------------------------------------------------*/
 
 /*------------------------------------------------------*/
 main(int argc, char **argv) {

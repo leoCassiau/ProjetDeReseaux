@@ -8,11 +8,46 @@ client <adresse-serveur> <message-a-transmettre>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include "shifumi.c"
 
 typedef struct sockaddr 	sockaddr;
 typedef struct sockaddr_in 	sockaddr_in;
 typedef struct hostent 		hostent;
 typedef struct servent 		servent;
+
+char pseudo[256];
+
+void nouveauJoueur() {
+	printf("\n****************** SHIFUMI ******************\n");
+	printf("Bienvenu(e), veuillez indiquer votre pseudonyme : ");
+	scanf("%255s", pseudo);
+	printf("\nConnection au serveur en cours... \n")
+	// TODO Informer le serveur du nouveau joueur
+	// La réponse : affiche la partie en cours
+	// Ou on attends un joueur
+	printf("En attente d'un second joueur... \n");
+	// Attends la réponse du serveur
+}
+
+void nouvellePartie() {
+	printf("------------- Nouvelle partie -------------\n");
+}
+
+void nouveauTour() {
+	char coup[256];
+	do {
+		printf("Indiquez votre coup (Pierre, Feuille ou Ciseaux) : ");
+		scanf("%255s", coup);
+		printf("\n");
+	} while(strcmp(coup, "P") != 0 || strcmp(coup, "p") != 0 || strcmp(coup, "Pierre") != 0 ||
+			strcmp(coup, "F") != 0 || strcmp(coup, "f") != 0 || strcmp(coup, "Feuille") != 0 ||
+			strcmp(coup, "C") != 0 || strcmp(coup, "c") != 0 || strcmp(coup, "Ciseaux") != 0 );
+	//TODO Envoie du coup au serveur
+}
+
+void finTour() {
+	//TODO Reception du serveur
+}
 
 int main(int argc, char **argv) {
   
