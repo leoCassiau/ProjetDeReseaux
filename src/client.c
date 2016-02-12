@@ -17,7 +17,7 @@ typedef struct servent 		servent;
 
 
 int 	socket_descriptor, 	/* descripteur de socket */
-		longueur; 		/* longueur d'un buffer utilisé */
+		longueur; 		/* longueur d'un buffer utilisÃ© */
 sockaddr_in adresse_locale; 	/* adresse de socket local */
 hostent *	ptr_host; 		/* info sur une machine hote */
 servent *	ptr_service; 		/* info sur service */
@@ -111,10 +111,10 @@ void nouveauJoueur() {
 	printf("\nConnection au serveur en cours... \n");
 	sendMsg(pseudo);
 	// TODO Informer le serveur du nouveau joueur
-	// La r�ponse : affiche la partie en cours
+	// La réponse : affiche la partie en cours
 	// Ou on attends un joueur
 	printf("En attente d'un second joueur... \n");
-	// Attends la r�ponse du serveur
+	// Attends la réponse du serveur
 }
 
 void nouvellePartie() {
@@ -140,8 +140,6 @@ void finTour() {
 
 int main(int argc, char **argv) {
   
-    
-     
     /*if (argc != 3) {
 	perror("usage : client <adresse-serveur> <message-a-transmettre>");
 	exit(1);
