@@ -2,7 +2,7 @@
 Serveur a  lancer avant le client
 ------------------------------------------------*/
 /*---------------------Notre code----------------------*/
-#include <shifumi.c>	// Struct Joueur
+#include "shifumi.c"	// Struct Joueur
 #include <pthread.h>	// Parallelisation
 #include <stdbool.h>
 
@@ -60,7 +60,7 @@ void renvoi (int sock) {
 */
 
 /*---------------------Notre code----------------------*/
-bool nouveauJoueur(char[] pseudo) {
+bool nouveauJoueur(char *  pseudo[]) {
 
 	if(nbJoueurs >= NB_MAX_JOUEURS) {
 		//TODO On informe au client que le nb de joueur est au max
@@ -69,7 +69,10 @@ bool nouveauJoueur(char[] pseudo) {
 
 	//Initialisation du nouveau joueur
 	Joueur j;
-	j.nom = pseudo;
+	for(int i=0;i<sizeof(j.nom);i++){
+		
+	j.nom[i] = *pseudo[i];
+		}
 	j.score = 0;
 	j.isAlive = false;
 
@@ -248,12 +251,14 @@ main(int argc, char **argv) {
 			perror("erreur : impossible d'accepter la connexion avec le client.");
 			exit(1);
 		}
-        pthread_t * t;
+        pthread_t  t;
         // Compilation : gcc -o toto.exe server.c -lpthread
-        if(pthread_create(t,NULL, testThread,&nouv_socket_descriptor)) {
+        // gcc -o server server.c -pthread -g -fpermissive -std=c99 -D_GNU_SOURCE
+
+        if(pthread_create(&t,NULL, testThread,&nouv_socket_descriptor)) {
 			close(nouv_socket_descriptor);
 			continue;
 		}
-        pthread_join(*t, NULL);
+        pthread_join(t, NULL);
     }
 }
