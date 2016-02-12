@@ -1,5 +1,5 @@
 /*----------------------------------------------
-Serveur a  lancer avant le client
+Serveur a� lancer avant le client
 ------------------------------------------------*/
 /*---------------------Notre code----------------------*/
 #include "shifumi.c"	// Struct Joueur
@@ -101,7 +101,7 @@ void finPartie() {
 			for(int i = 0 ;  i < nbJoueurs ; i++) {
 				if(joueurs[i].isAlive) {
 					joueurs[i].score++;
-					// TODO Informer à tous le monde que joueurs[i] a gagné
+					// TODO Informer � tous le monde que joueurs[i] a gagn�
 					return;
 				}
 			}
@@ -125,13 +125,13 @@ void finTour() {
 	if(attaque(joueurs[nbJoueurs - 1], joueurs[0])) {
 		joueurs[0].isAlive = false;
 		nbJoueursAlive--;
-		// TODO On informe à joueurs[0] sa mort
+		// TODO On informe � joueurs[0] sa mort
 	}
 	for(int i = 1 ; i < nbJoueurs ; i++) {
 		if(attaque(joueurs[i], joueurs[i + 1])) {
 			joueurs[i + 1].isAlive = false;
 			nbJoueursAlive--;
-			// TODO On informe à joueurs[i+1] sa mort
+			// TODO On informe � joueurs[i+1] sa mort
 		}
 	}
 
@@ -145,11 +145,15 @@ void finTour() {
 void renvoi (int sock) {
 
     char buffer[256];
+    Joueur player;
     int longueur;
 
-    if ((longueur = read(sock, buffer, sizeof(buffer))) <= 0)
+    if ((longueur = read(sock, &player, sizeof(Joueur))) <= 0)
     	return;
-
+	for(int i=0;i<sizeof(player.nom);i++){
+		
+	buffer[i]=player.nom[i];
+		}
     printf("message lu : %s \n", buffer);
 
     // TRAITEMENT ? A VOIR A QUOI RESSEMBLE BUFFER
@@ -228,7 +232,7 @@ main(int argc, char **argv) {
 		exit(1);
     }
 
-    /* association du socket socket_descriptor Ã  la structure d'adresse adresse_locale */
+    /* association du socket socket_descriptor à la structure d'adresse adresse_locale */
     if ((bind(socket_descriptor, (sockaddr*)(&adresse_locale), sizeof(adresse_locale))) < 0) {
 		perror("erreur : impossible de lier la socket a l'adresse de connexion.");
 		exit(1);
@@ -242,7 +246,7 @@ main(int argc, char **argv) {
     
 		longueur_adresse_courante = sizeof(adresse_client_courant);
 		
-		/* adresse_client_courant sera renseignÃ© par accept via les infos du connect */
+		/* adresse_client_courant sera renseigné par accept via les infos du connect */
 		if ((nouv_socket_descriptor = 
 			accept(socket_descriptor, 
 			       (sockaddr*)(&adresse_client_courant),

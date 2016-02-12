@@ -17,7 +17,7 @@ typedef struct servent 		servent;
 
 
 int 	socket_descriptor, 	/* descripteur de socket */
-		longueur; 		/* longueur d'un buffer utilisÃ© */
+		longueur; 		/* longueur d'un buffer utilisé */
 sockaddr_in adresse_locale; 	/* adresse de socket local */
 hostent *	ptr_host; 		/* info sur une machine hote */
 servent *	ptr_service; 		/* info sur service */
@@ -27,7 +27,7 @@ char *	host; 			/* nom de la machine distante */
 char * pseudo; 
 
 
-void sendMsg(char* mesg){
+void sendMsg(Joueur player){
 	if ((ptr_host = gethostbyname(host)) == NULL) {
 	perror("erreur : impossible de trouver le serveur a partir de son adresse.");
 	exit(1);
@@ -75,10 +75,11 @@ void sendMsg(char* mesg){
     printf("envoi d'un message au serveur. \n");
       
     /* envoi du message vers le serveur */
-    if ((write(socket_descriptor, mesg, strlen(mesg))) < 0) {
+    if ((write(socket_descriptor, &player, sizeof(Joueur)) < 0)) {
 	perror("erreur : impossible d'ecrire le message destine au serveur.");
 	exit(1);
     }
+   
     
     /* mise en attente du prgramme pour simuler un delai de transmission */
     sleep(3);
@@ -102,19 +103,23 @@ void sendMsg(char* mesg){
 
 
 void nouveauJoueur() {
+	
 	pseudo = malloc(sizeof(char) * 256);
 	printf("\n****************** SHIFUMI ******************\n");
 	printf("Bienvenu(e), veuillez indiquer votre pseudonyme : ");
 	scanf("%s", pseudo);
 	printf("\n Bienvenu(e), %s \n",pseudo);
 	
+	Joueur j;
+	
+	strcpy(j.nom,pseudo);
 	printf("\nConnection au serveur en cours... \n");
-	sendMsg(pseudo);
+	sendMsg(j);
 	// TODO Informer le serveur du nouveau joueur
-	// La réponse : affiche la partie en cours
+	// La r�ponse : affiche la partie en cours
 	// Ou on attends un joueur
 	printf("En attente d'un second joueur... \n");
-	// Attends la réponse du serveur
+	// Attends la r�ponse du serveur
 }
 
 void nouvellePartie() {
@@ -140,6 +145,8 @@ void finTour() {
 
 int main(int argc, char **argv) {
   
+    
+     
     /*if (argc != 3) {
 	perror("usage : client <adresse-serveur> <message-a-transmettre>");
 	exit(1);
