@@ -25,6 +25,7 @@ typedef struct servent servent;
 int nbJoueurs = 0;
 Joueur joueurs[NB_MAX_JOUEURS];
 int nbJoueursAlive;
+bool nouveauTour=false;
 
 /*---------------------Code du prof--------------------*/
 /*
@@ -60,7 +61,7 @@ void renvoi (int sock) {
 */
 
 /*---------------------Notre code----------------------*/
-bool nouveauJoueur(char *  pseudo[]) {
+bool nouveauJoueur(Joueur client) {
 
 	if(nbJoueurs >= NB_MAX_JOUEURS) {
 		//TODO On informe au client que le nb de joueur est au max
@@ -69,17 +70,19 @@ bool nouveauJoueur(char *  pseudo[]) {
 
 	//Initialisation du nouveau joueur
 	Joueur j;
-	for(int i=0;i<sizeof(j.nom);i++){
-		
-	j.nom[i] = *pseudo[i];
-		}
+	
+		strcpy(j.nom,client.nom);
 	j.score = 0;
+	j.aJoue=false;
 	j.isAlive = false;
-
-	//Ajout du nouveau joueur dans la liste
-	joueurs[nbJoueurs] = j;
-	++nbJoueurs;
 	j.rank = nbJoueurs;
+	//Ajout du nouveau joueur dans la liste
+	
+	
+	joueurs[nbJoueurs]=j;
+	
+	
+	++nbJoueurs;
 
 	//TODO Le client voit la partie en cours
 	return true;
@@ -120,6 +123,14 @@ void nouveauTour() {
 	}
 }
 
+bool pretACalculer(){
+	for(int i=0;i<=nbJoueurs;i++){
+		if (joueurs[i].aJoue==false);
+			return false;
+		}else
+		return true;
+}
+
 // A lancer que quand tous les joueurs ont signaler leur coup (fin timer)
 void finTour() {
 	if(attaque(joueurs[nbJoueurs - 1], joueurs[0])) {
@@ -142,42 +153,68 @@ void finTour() {
 
 
 
-void renvoi (int sock) {
+Joueur receiveClientInfo (int sock) {
 
-    char buffer[256];
+   //Copie infos du joueur envoyé par socket dans le tableau de joueurs du serveur
     Joueur player;
     int longueur;
+   
 
     if ((longueur = read(sock, &player, sizeof(Joueur))) <= 0)
     	return;
-	for(int i=0;i<sizeof(player.nom);i++){
-		
-	buffer[i]=player.nom[i];
-		}
-    printf("message lu : %s \n", buffer);
+	//
+	//i=player.rank;
+	//joueurs[i].c=player.c;
+	//joueurs[i].score=player.score;
+	//joueurs[i].isAlive=player.isAlive;
+	//strcpy(joueurs[i].nom,player.nom);
+	
 
-    // TRAITEMENT ? A VOIR A QUOI RESSEMBLE BUFFER
-
-    printf("message apres traitement : %s \n", buffer);
-
-    printf("renvoi du message traite.\n");
-
-    write(sock,buffer,strlen(buffer)+1);
-
-    printf("message envoye. \n");
-
-    return;
+   
+	return player;
 }
 
+void sendClientInfo(int sock){
+	 int longueur;
+	//Renvoie les informations des joueurs aux clients
+	if ((longueur=write(sock,&joueurs,sizeof(Joueur[NB_MAX_JOUEURS])))<=0)
+	    return;
+	
+}
 void * testThread(void * n) {
     int * nouv_socket_descriptor = (int*) n;
     /* traitement du message */
-    printf("reception d'un message.\n");
+    //printf("reception d'un message.\n");
 
-    renvoi(*nouv_socket_descriptor);
-
+    Joueur jr=receiveClientInfo(*nouv_socket_descriptor);
+    if(jr.score>=0){
+		joueurs[jr.rank]=jr;
+		if(joueurs[jr.rank].c==pierre)
+		printf(" %s vient de jouer : Pierre \n", jr.nom);
+			else if(jr.c==ciseaux)
+		printf(" %s vient de jouer : Ciseaux \n", jr.nom);
+			else if(jr.c==feuille)
+		printf(" %s vient de jouer : Feuille \n", jr.nom);
+			sleep(5);
+			finTour();
+			
+	}else if(jr.score<0){
+		nouveauJoueur(jr);
+		printf("Joueur ajoute : %s \n", jr.nom);
+		sendClientInfo(*nouv_socket_descriptor);
+		//printf("son score : %i \n", jr.score);
+		//printf("son rang : %i \n", jr.rank);
+		//if(jr.isAlive){
+		//printf("IL EST VIVANT \n");
+		//}
+	}
+	
+	//TODO: jouer le tour
+	//TODO: verifier que tous les joueurs vivants ont ete modifies
+	    
     close(*nouv_socket_descriptor);
 }
+
 
 /*------------------------------------------------------*/
 main(int argc, char **argv) {
@@ -244,6 +281,11 @@ main(int argc, char **argv) {
     /* attente des connexions et traitement des donnees recues */
     for(;;) {
     
+		//if (pretACalculer()==true){
+		//	finTour();
+		//	sendClientInfo(nouv_socket_descriptor);
+		//		}
+		
 		longueur_adresse_courante = sizeof(adresse_client_courant);
 		
 		/* adresse_client_courant sera renseignÃ© par accept via les infos du connect */
@@ -264,5 +306,7 @@ main(int argc, char **argv) {
 			continue;
 		}
         pthread_join(t, NULL);
+        
+
     }
 }

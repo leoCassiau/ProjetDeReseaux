@@ -9,6 +9,7 @@ client <adresse-serveur> <message-a-transmettre>
 #include <netdb.h>
 #include <string.h>
 #include "shifumi.c"
+#include <stdbool.h>
 
 typedef struct sockaddr 	sockaddr;
 typedef struct sockaddr_in 	sockaddr_in;
@@ -26,8 +27,15 @@ char 	buffer[256];
 char *	host; 			/* nom de la machine distante */
 char * pseudo; 
 
+/*---------------------Notre code----------------------*/
+#define NB_MAX_JOUEURS 256
+int nbJoueurs = 0;
+Joueur joueurs[NB_MAX_JOUEURS];
+Joueur joueurClient;
+bool peutJouer=false; 
+bool lirePseudo=true;
 
-void sendMsg(Joueur player){
+void sendJoueurInfo(Joueur player){
 	if ((ptr_host = gethostbyname(host)) == NULL) {
 	perror("erreur : impossible de trouver le serveur a partir de son adresse.");
 	exit(1);
@@ -56,7 +64,6 @@ void sendMsg(Joueur player){
     adresse_locale.sin_port = htons(5000);
     /*-----------------------------------------------------------*/
     
-    printf("numero de port pour la connexion au serveur : %d \n", ntohs(adresse_locale.sin_port));
     
     /* creation de la socket */
     if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -69,10 +76,7 @@ void sendMsg(Joueur player){
 	perror("erreur : impossible de se connecter au serveur.");
 	exit(1);
     }
-    
-    printf("connexion etablie avec le serveur. \n");
-    
-    printf("envoi d'un message au serveur. \n");
+  
       
     /* envoi du message vers le serveur */
     if ((write(socket_descriptor, &player, sizeof(Joueur)) < 0)) {
@@ -82,21 +86,39 @@ void sendMsg(Joueur player){
    
     
     /* mise en attente du prgramme pour simuler un delai de transmission */
-    sleep(3);
-     
-    printf("message envoye au serveur. \n");
+    sleep(2);
                 
     /* lecture de la reponse en provenance du serveur */
-    while((longueur = read(socket_descriptor, buffer, sizeof(buffer))) > 0) {
-	printf("reponse du serveur : \n");
-	write(1,buffer,longueur);
+    Joueur joueursListe[NB_MAX_JOUEURS];
+    while((longueur = read(socket_descriptor, &joueursListe, sizeof(Joueur[NB_MAX_JOUEURS]))) > 0) {
+		;
+	for(int i=0;i<=256;i++){	
+		//joueurs[i].c=joueursListe[i].c;
+		//joueurs[i].isAlive=joueursListe[i].isAlive;
+		//joueurs[i].score=joueursListe[i].score;
+		//joueurs[i].rank=joueursListe[i].rank;
+		//strcpy(joueurs[i].nom,joueursListe[i].nom);
+		joueurs[i]=joueursListe[i];
+		if(strcmp(joueurs[i].nom,joueurClient.nom)==0){
+			joueurClient.c=joueurs[i].c;
+			joueurClient.rank=i;
+			joueurClient.score=joueurs[i].score;
+			joueurClient.isAlive=joueurs[i].isAlive;
+		}
+		}
     }
     
-    printf("\nfin de la reception.\n");
     
+   
+    
+    
+   
+    
+    
+  
     close(socket_descriptor);
     
-    printf("connexion avec le serveur fermee, fin du programme.\n");
+  
     
     //exit(0);
 }
@@ -113,30 +135,73 @@ void nouveauJoueur() {
 	Joueur j;
 	
 	strcpy(j.nom,pseudo);
+	j.score=-1;
 	printf("\nConnection au serveur en cours... \n");
-	sendMsg(j);
+	joueurClient=j;
+	sendJoueurInfo(j);
+	
 	// TODO Informer le serveur du nouveau joueur
 	// La réponse : affiche la partie en cours
 	// Ou on attends un joueur
-	printf("En attente d'un second joueur... \n");
+	//printf("En attente d'un second joueur... \n");
 	// Attends la réponse du serveur
-}
-
-void nouvellePartie() {
-	printf("------------- Nouvelle partie -------------\n");
 }
 
 void nouveauTour() {
 	char coup[256];
+	joueurClient.aJoue=false;
 	do {
 		printf("Indiquez votre coup (Pierre, Feuille ou Ciseaux) : ");
 		scanf("%255s", coup);
+		
 		printf("\n");
-	} while(strcmp(coup, "P") != 0 || strcmp(coup, "p") != 0 || strcmp(coup, "Pierre") != 0 ||
-			strcmp(coup, "F") != 0 || strcmp(coup, "f") != 0 || strcmp(coup, "Feuille") != 0 ||
-			strcmp(coup, "C") != 0 || strcmp(coup, "c") != 0 || strcmp(coup, "Ciseaux") != 0 );
-	//TODO Envoie du coup au serveur
+		
+		if(strcmp(coup, "P")==0 || strcmp(coup, "p")==0  || strcmp(coup, "Pierre")==0){
+		joueurClient.c=pierre;
+		peutJouer=false;
+		joueurClient.aJoue=true;
+		sendJoueurInfo(joueurClient);
+			}
+	
+	if(strcmp(coup, "F")==0|| strcmp(coup, "f")==0 || strcmp(coup, "Feuille")==0){
+		joueurClient.c=feuille;
+		peutJouer=false;
+		joueurClient.aJoue=true;
+		sendJoueurInfo(joueurClient);
+			}
+	
+	if(strcmp(coup, "C")==0 || strcmp(coup, "c")==0  || strcmp(coup, "Ciseaux")==0){
+		joueurClient.c=ciseaux;
+		peutJouer=false;
+		joueurClient.aJoue=true;
+		sendJoueurInfo(joueurClient);
 }
+	} while((strcmp(coup, "P") != 0 || strcmp(coup, "p") != 0 || strcmp(coup, "Pierre") != 0 ||
+	 		strcmp(coup, "F") != 0 || strcmp(coup, "f") != 0 || strcmp(coup, "Feuille") != 0 ||
+	 		strcmp(coup, "C") != 0 || strcmp(coup, "c") != 0 || strcmp(coup, "Ciseaux") != 0 )&&peutJouer==true);
+	
+		
+}
+void nouvellePartie() {
+	printf("------------- Nouvelle partie -------------\n");
+	joueurClient.isAlive=true;
+	peutJouer=true;
+	printf("score : %i \n",joueurClient.score);
+	while(peutJouer){
+		if(joueurClient.isAlive==true){
+				printf("Tu es encore vivant.  \n");
+			}else if(joueurClient.isAlive==false)
+				printf("Tu es encore MORT.  \n");
+			printf("Ton rang dans la ronde est:    %i\n",joueurClient.rank);
+			printf("Ton score est :  %i \n",joueurClient.score);
+		nouveauTour();
+		sleep(10);
+		peutJouer=true;
+		
+	}
+}
+
+
 
 void finTour() {
 	//TODO Reception du serveur
@@ -160,10 +225,32 @@ int main(int argc, char **argv) {
     printf("adresse du serveur  : %s \n", host);
     printf("message envoye      : %s \n", mesg);
     */
+    host = argv[1];
     for (;;){
-	host = argv[1];
 	
-		nouveauJoueur();
+		if(lirePseudo){
+			nouveauJoueur();
+			lirePseudo=false;
+			
+			printf("NOM :  %20s \n",joueurClient.nom);
+			printf("Ton rang dans la ronde est:    %i\n",joueurClient.rank);
+			printf("Ton score est :  %i \n",joueurClient.score);
+			
+			nouvellePartie();
+			}
+		else if(joueurClient.isAlive==false){
+			
+			char reponse[2];
+			do{
+			printf(" Voulez-vous rejouer? (y/n) \n");
+			scanf("%2s", reponse);
+			printf("\n");}
+			while(strcmp(reponse,"y")!=0);
+			
+			//CRADE
+			
+			nouvellePartie();
+		}	
 		
 	}
     
