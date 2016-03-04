@@ -48,7 +48,7 @@ void afficheJoueurs(Joueur joueurs[256]) {
 	printf("|--------|------|-------|\n");
 	int i;	
 	for(i = 0; i < 256 ; i++) {
-		char const * coups[3] = {"pierre","feuille","ciseaux"};
+		char * coups[3] = {"pierre","feuille","ciseaux"};
 		printf("|%s|%s|%s|\n",joueurs[i].nom,coups[joueurs[i].c],joueurs[i].score);
 	}
 	printf("|________|______|_______|\n");
