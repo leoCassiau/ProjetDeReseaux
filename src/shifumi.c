@@ -16,6 +16,7 @@ typedef struct  {
     int score;  // score actuel du joueur
     int thread; //id du thread du client
 	bool isAlive; //
+	bool aJoue;
 	int rank; //Position du joueur dans la "ronde", premier arrivé premier servi, maj par les morts et deconnexions
 int ttl; //Durée de vie du joueur
 }Joueur;
