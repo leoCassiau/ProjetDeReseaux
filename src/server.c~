@@ -103,6 +103,7 @@ void enleverJoueur(Joueur j) {
 	}
 	if(trouve) {
 		--nbJoueurs;
+		joueurs[nbJoueurs] = ;
 	}
 }
 

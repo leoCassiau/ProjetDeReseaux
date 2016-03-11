@@ -50,7 +50,7 @@ void afficheJoueurs(Joueur joueurs[256]) {
 	int i;	
 	for(i = 0; i < 256 ; i++) {
 		char const * coups[3] = {"pierre","feuille","ciseaux"};
-		printf("|%s|%s|%d|\n",joueurs[i].nom,coups[joueurs[i].c],joueurs[i].score);
+		printf("|%s|%s|%s|\n",joueurs[i].nom,coups[joueurs[i].c],joueurs[i].score);
 	}
 	printf("|________|______|_______|\n");
 }
