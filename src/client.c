@@ -191,9 +191,10 @@ void nouvellePartie() {
 		if(joueurClient.isAlive==true){
 				printf("Tu es encore vivant.  \n");
 			}else if(joueurClient.isAlive==false)
-				printf("Tu es encore MORT.  \n");
+				printf("Tu es  MORT.  \n");
 			printf("Ton rang dans la ronde est:    %i\n",joueurClient.rank);
 			printf("Ton score est :  %i \n",joueurClient.score);
+			
 		nouveauTour();
 		sleep(10);
 		peutJouer=true;
@@ -225,6 +226,7 @@ int main(int argc, char **argv) {
     printf("adresse du serveur  : %s \n", host);
     printf("message envoye      : %s \n", mesg);
     */
+    //host="localhost";
     host = argv[1];
     for (;;){
 	

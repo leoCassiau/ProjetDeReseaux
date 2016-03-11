@@ -25,7 +25,7 @@ typedef struct servent servent;
 int nbJoueurs = 0;
 Joueur joueurs[NB_MAX_JOUEURS];
 int nbJoueursAlive;
-bool nouveauTour=false;
+
 
 /*---------------------Code du prof--------------------*/
 /*
@@ -125,12 +125,14 @@ void nouveauTour() {
 
 bool pretACalculer(){
 	for(int i=0;i<=nbJoueurs;i++){
-		if (joueurs[i].aJoue==false);
+		if (joueurs[i].aJoue==false){
 			return false;
-		}else
+		}
+		else{
 		return true;
+		}
+	}
 }
-
 // A lancer que quand tous les joueurs ont signaler leur coup (fin timer)
 void finTour() {
 	if(attaque(joueurs[nbJoueurs - 1], joueurs[0])) {
@@ -189,14 +191,27 @@ void * testThread(void * n) {
     Joueur jr=receiveClientInfo(*nouv_socket_descriptor);
     if(jr.score>=0){
 		joueurs[jr.rank]=jr;
-		if(joueurs[jr.rank].c==pierre)
-		printf(" %s vient de jouer : Pierre \n", jr.nom);
-			else if(jr.c==ciseaux)
-		printf(" %s vient de jouer : Ciseaux \n", jr.nom);
-			else if(jr.c==feuille)
-		printf(" %s vient de jouer : Feuille \n", jr.nom);
-			sleep(5);
-			finTour();
+		if(joueurs[jr.rank].c==pierre){
+			printf(" %s vient de jouer : Pierre \n", jr.nom);
+			joueurs[jr.rank].isAlive=false;
+			
+			}else if(jr.c==ciseaux){
+				printf(" %s vient de jouer : Ciseaux \n", jr.nom);
+              		
+				}
+			else if(jr.c==feuille){
+			printf(" %s vient de jouer : Feuille \n", jr.nom);
+			
+			}
+			if(joueurs[jr.rank].isAlive){
+				printf("%s est vivant \n",jr.nom);
+			}else 
+				printf("%s est mort \n",jr.nom);
+			
+			sendClientInfo(*nouv_socket_descriptor);
+			
+			//finTour();
+			
 			
 	}else if(jr.score<0){
 		nouveauJoueur(jr);
