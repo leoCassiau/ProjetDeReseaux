@@ -21,7 +21,7 @@ typedef enum etatPartie {
 }etatPartie;
 
 typedef struct {
-    char nom[256]; // pseudo
+    char nom[TAILLE_MAX_NOM]; // pseudo
     coup coup;     // coup joué
     int score;  // score actuel du joueur
     int thread; //id du thread du client
@@ -41,7 +41,7 @@ bool bat(coup c1, coup c2) {
 }
 
 bool attaque(Joueur j1, Joueur j2) {
-    if(bat(j1.c, j2.c)) {
+    if(bat(j1.coup, j2.coup)) {
         return true;
     }else
     return false;
@@ -53,7 +53,7 @@ void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS]) {
 	int i;	
 	for(i = 0; i < 256 ; i++) {
 		char const * coups[3] = {"pierre","feuille","ciseaux"};
-		printf("|%s|%s|%d|\n",joueurs[i].nom,coups[joueurs[i].c],joueurs[i].score);
+		printf("|%s|%s|%d|\n",joueurs[i].nom,coups[joueurs[i].coup],joueurs[i].score);
 	}
 	printf("|________|______|_______|\n");
 }

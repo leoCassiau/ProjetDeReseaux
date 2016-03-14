@@ -42,7 +42,6 @@ void sendDatagramme(Datagramme data) {
     }
 
 		printf("Datagramme envoyé.");
-		close(socket_descriptor);
 }
 
 Datagramme readDatagramme() {

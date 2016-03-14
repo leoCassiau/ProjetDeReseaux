@@ -141,10 +141,7 @@ void finTour() {
 Datagramme readDatagramme(int * socket_descriptor) {
 		Datagramme data;
 		int longueur;
-		if((longueur = read(socket_descriptor, &data, sizeof(Datagramme))) <= 0) {
-			// data.operation = rien;
-			return data;
-		}
+		read(socket_descriptor, &data, sizeof(Datagramme));
 		return data;
 }
 
@@ -162,10 +159,6 @@ void * fils(void * n) {
 			Datagramme result;
 			result.partiePleine = !addJoueur(data.joueur);
 			writeDatagramme(socket_descriptor, result);
-		}
-
-		if(data.operation == nouveauJoueur) {
-			
 		}
 	}
 }

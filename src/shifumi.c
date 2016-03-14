@@ -21,7 +21,7 @@ typedef enum etatPartie {
 }etatPartie;
 
 typedef struct {
-    char nom[256]; // pseudo
+    char nom[TAILLE_MAX_NOM]; // pseudo
     coup coup;     // coup joué
     int score;  // score actuel du joueur
     int thread; //id du thread du client

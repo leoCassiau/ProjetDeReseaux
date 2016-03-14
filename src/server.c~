@@ -141,10 +141,7 @@ void finTour() {
 Datagramme readDatagramme(int * socket_descriptor) {
 		Datagramme data;
 		int longueur;
-		if((longueur = read(socket_descriptor, &data, sizeof(Datagramme))) <= 0) {
-			// data.operation = rien;
-			return data;
-		}
+		read(socket_descriptor, &data, sizeof(Datagramme));
 		return data;
 }
 
@@ -172,7 +169,7 @@ void * fils(void * n) {
 
 /*------------------------------------------------------*/
 int main(int argc, char **argv) {
-    
+     
 		// Initialisation
     gethostname(machine,256);		/* recuperation du nom de la machine */
     

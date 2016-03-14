@@ -70,7 +70,7 @@ Joueur creerJoueur(const char * pseudo) {
 
 	return j;
 }
-
+ 
 void jouer() {
 	char coup[256];
 	bool fin = false;
