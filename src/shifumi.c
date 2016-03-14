@@ -3,19 +3,29 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define NB_MAX_JOUEURS 256
+#define TAILLE_MAX_NOM 256
 
 typedef enum coup {
     pierre,
     feuille,
-    ciseaux
+    ciseaux,
+		rien
 }coup;
 
-typedef struct  {
+typedef enum etatPartie {
+	debut,
+	fin,
+	enCours,
+	enAttente
+}etatPartie;
+
+typedef struct {
     char nom[256]; // pseudo
-    coup c;     // coup joué
+    coup coup;     // coup joué
     int score;  // score actuel du joueur
     int thread; //id du thread du client
-	bool isAlive; //
+	bool enVie; //
 	bool aJoue;
 	int rank; //Position du joueur dans la "ronde", premier arrivé premier servi, maj par les morts et deconnexions
 int ttl; //Durée de vie du joueur
@@ -31,33 +41,25 @@ bool bat(coup c1, coup c2) {
 }
 
 bool attaque(Joueur j1, Joueur j2) {
-    if(bat(j1.c, j2.c)) {
+    if(bat(j1.coup, j2.coup)) {
         return true;
     }else
     return false;
 }
 
-bool defend(Joueur j1, Joueur j2) {
-    if(bat(j2.c, j1.c)) {
-        return true;
-    }
-    return false;
-}
-
-void afficheJoueurs(Joueur joueurs[256]) {
+void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS]) {
 	printf("| Joueur | Coup | Score |\n");
 	printf("|--------|------|-------|\n");
 	int i;	
 	for(i = 0; i < 256 ; i++) {
 		char const * coups[3] = {"pierre","feuille","ciseaux"};
-		printf("|%s|%s|%d|\n",joueurs[i].nom,coups[joueurs[i].c],joueurs[i].score);
+		printf("|%s|%s|%d|\n",joueurs[i].nom,coups[joueurs[i].coup],joueurs[i].score);
 	}
 	printf("|________|______|_______|\n");
 }
 
 typedef enum Operation{
-	play,
-	report
+	nouveauJoueur,
 }Operation;
 
 
@@ -67,5 +69,10 @@ struct socketMain{
 	
 };
 
-
+// AMOI
+typedef struct {
+	Operation operation;
+	Joueur joueur;
+	bool partiePleine;
+} Datagramme;
 
