@@ -13,7 +13,7 @@
 #include <linux/types.h> 	/* pour les sockets */
 #include <sys/socket.h>
 #include <netdb.h> 		/* pour hostent, servent */
-
+#include <signal.h>     /* Pour ignorer le signal SIGPIPE(de la merde)*/
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
@@ -31,7 +31,7 @@ char machine[256]; /* nom de la machine locale */
 // Variables globales pour le déroulement du jeu
 int nbJoueurs = 0;
 Joueur joueurs[NB_MAX_JOUEURS];
-int nbJoueursAlive;
+int nbJoueursAlive=0;
 
 /* ----------------- fonctions du tableau joueurs ----------------- */
 bool addJoueur(Joueur joueur) {
@@ -43,6 +43,7 @@ bool addJoueur(Joueur joueur) {
 	// Ajout du nouveau joueur dans la liste
 	joueurs[nbJoueurs] = joueur;
 	++nbJoueurs;
+	
 
 	return true;
 }
@@ -73,11 +74,13 @@ Datagramme readDatagramme(int * socket_descriptor) {
 	return data;
 }
 
-void writeDatagramme(int * socket_descriptor, Datagramme data) {
+void writeDatagramme(int  socket_descriptor, Datagramme data) {
+	signal(SIGPIPE, SIG_IGN);//Ignorer le signal SIGPIPE
 	write(socket_descriptor, &data, sizeof(Datagramme));
 }
 
 void * nouveauClient(void * n) {
+	
 	int nouv_socket_descriptor; /* [nouveau] descripteur de socket */
 
 	/* adresse_client_courant sera renseignÃ© par accept via les infos du connect */
@@ -95,19 +98,23 @@ void * nouveauClient(void * n) {
 	// Ajout du joueur et vérifie si la partie est pleine
 	Datagramme result;
 	result.partiePleine = !addJoueur(data.joueur);
-
+	if(result.partiePleine){
+		printf("DEBUG: erreur ds addJoueur/n");
+		}
 	// Vérifie l'état de la partie
 	if (nbJoueurs < 2) { // Attends un deuxieme joueur
 		result.etat = enAttente;
 	} else if (nbJoueurs == 2) { // Debut du jeu
 		result.etat = nouvellePartie;
+		
 		writeDatagramme(joueurs[0].socket, result);
 	} else { // Affichage du tour en cours
 		result.etat = finTour;
 	}
 
 	// Envoie du datagramme
-	writeDatagramme(socket_descriptor, result);
+	
+	writeDatagramme(nouv_socket_descriptor, result);
 }
 
 void * reception(void * n) {
@@ -168,13 +175,13 @@ int main(int argc, char **argv) {
 	// Thread gérant les nouveaux joueurs.
 	pthread_t t_nouveauClient;
 	pthread_create(&t_nouveauClient, NULL, nouveauClient, NULL);
-
+	
 	/* attente des connexions et traitement des donnees recues */
 	for (;;) {
-
+		
 		// reception des coups joués par les joueurs
 		pthread_t t;
-		pthreads_t threads[NB_MAX_JOUEURS];
+		pthread_t threads[NB_MAX_JOUEURS];
 		int nbThreads = 0;
 		int i;
 		for(i=0 ; i < nbJoueurs ; i++) {
@@ -185,7 +192,7 @@ int main(int argc, char **argv) {
 
 		// Synchronisation
 		for (i = 0; i < nbThreads; i++) {
-			pthread_join(&threads[i]);
+			pthread_join(&threads[i],NULL);
 		}
 
 		// On fait jouer les joueurs entre eux
@@ -199,15 +206,18 @@ int main(int argc, char **argv) {
 
 			attaque(&joueurs[i], &joueurs[j]);
 		}
-
 		// On informe les joueurs des résultats
 		for (i = 0; i < nbJoueurs; i++) {
 			Datagramme data;
 			data.etat = finTour;
-			data.joueurs = joueurs;
+			int counter;
+			for(counter=0;counter<=nbJoueurs;counter++){
+			data.joueurs[counter] = joueurs[counter];
+			}
 			data.nbJoueurs = nbJoueurs;
-			sendDatagramme(joueurs[i].socket, data);
+			writeDatagramme(joueurs[i].socket, data);
 		}
+		
 	}
 
 	return 0;

@@ -31,7 +31,7 @@ char * host; /* adresse de l'hôte*/
 Joueur joueurClient;	// Etat du client actuel
 
 void sendDatagramme(Datagramme data) {
-	printf("Envoie d'un datagramme...\n");
+	printf("Envoi d'un datagramme...\n");
 
 	/* tentative de connexion au serveur dont les infos sont dans adresse_locale */
 	if ((connect(socket_descriptor, (sockaddr*) (&adresse_locale),
@@ -75,7 +75,7 @@ Joueur creerJoueur(const char * pseudo) {
 	return j;
 }
 
-void * jouer(void * n) {
+void * jouer() {
 	char coup[256];
 	bool fin = false;
 	do {
