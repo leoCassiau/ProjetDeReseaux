@@ -19,6 +19,15 @@ typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
 typedef struct servent servent;
 
+// Variables globales utilisées pour la connexion avec le serveur
+int socket_descriptor, /* descripteur de socket */
+longueur_adresse_courante; /* longueur d'adresse courante d'un client */
+sockaddr_in adresse_locale, /* structure d'adresse locale*/
+adresse_client_courant; /* adresse client courant */
+hostent* ptr_hote; /* les infos recuperees sur la machine hote */
+servent* ptr_service; /* les infos recuperees sur le service de la machine */
+char machine[256]; /* nom de la machine locale */
+
 // Variables globales pour le déroulement du jeu
 int nbJoueurs = 0;
 Joueur joueurs[NB_MAX_JOUEURS];
@@ -69,6 +78,8 @@ void writeDatagramme(int * socket_descriptor, Datagramme data) {
 }
 
 void * nouveauClient(void * n) {
+	int nouv_socket_descriptor; /* [nouveau] descripteur de socket */
+
 	/* adresse_client_courant sera renseignÃ© par accept via les infos du connect */
 	if ((nouv_socket_descriptor = accept(socket_descriptor,
 			(sockaddr*) (&adresse_client_courant), &longueur_adresse_courante))
@@ -76,59 +87,42 @@ void * nouveauClient(void * n) {
 		perror("erreur : impossible d'accepter la connexion avec le client.");
 		exit(1);
 	}
+
+	// Ajout du client en tant que joueur de la partie
+	Datagramme data = readDatagramme(nouv_socket_descriptor);
+	printf("Ajout du joueur : %s.\n", data.joueur.nom);
+
+	// Ajout du joueur et vérifie si la partie est pleine
+	Datagramme result;
+	result.partiePleine = !addJoueur(data.joueur);
+
+	// Vérifie l'état de la partie
+	if (nbJoueurs < 2) { // Attends un deuxieme joueur
+		result.etat = enAttente;
+	} else if (nbJoueurs == 2) { // Debut du jeu
+		result.etat = nouvellePartie;
+		writeDatagramme(joueurs[0].socket, result);
+	} else { // Affichage du tour en cours
+		result.etat = finTour;
+	}
+
+	// Envoie du datagramme
+	writeDatagramme(socket_descriptor, result);
 }
 
 void * reception(void * n) {
-	int * socket_descriptor = (int*) n;
-	// Connexion
-	Datagramme data = readDatagramme(socket_descriptor);
+	// Reception du datagramme
+	int * nouv_socket_descriptor = (int*) n;
+	Datagramme data = readDatagramme(nouv_socket_descriptor);
 
-	// Nouveau joueur ?
-	if (data.etat == nouveauJoueur) {
-		printf("Ajout du joueur : %s.\n", data.joueur.nom);
-
-		// Ajout du joueur et vérifie si la partie est pleine
-		Datagramme result;
-		result.partiePleine = !addJoueur(data.joueur);
-
-		// Vérifie l'état de la partie
-		if (nbJoueurs < 2) { // Attends un deuxieme joueur
-			result.etat = enAttente;
-		} else if (nbJoueurs == 2) { // Debut du jeu
-			result.etat = nouvellePartie;
-			writeDatagramme(joueurs[0].socket, result);
-		} else { // Affichage du tour en cours
-			result.etat = finTour;
-		}
-
-		// Envoie du datagramme
-		writeDatagramme(socket_descriptor, result);
-	}
-
-	// Reçoit du joueur
-	else {
-
-		Datagramme data = readDatagramme(socket_descriptor);
-
-		printf("%s a joué le coup : %s.\n", data.joueur.nom,
-				coupToString(data.joueur.coup));
-		joueurs[data.joueur.rang] = data.joueur;
-	}
+	// Mise à jour du joueur
+	printf("%s a joué le coup : %s.\n", data.joueur.nom,
+			coupToString(data.joueur.coup));
+	joueurs[data.joueur.rang] = data.joueur;
 }
 
 /* ----------------- main ----------------- */
 int main(int argc, char **argv) {
-
-	// Variables utilisées pour la connexion avec le serveur
-	int socket_descriptor, /* descripteur de socket */
-	nouv_socket_descriptor, /* [nouveau] descripteur de socket */
-	longueur_adresse_courante; /* longueur d'adresse courante d'un client */
-	sockaddr_in adresse_locale, /* structure d'adresse locale*/
-	adresse_client_courant; /* adresse client courant */
-	hostent* ptr_hote; /* les infos recuperees sur la machine hote */
-	servent* ptr_service; /* les infos recuperees sur le service de la machine */
-	char machine[256]; /* nom de la machine locale */
-
 	gethostname(machine, 256); /* recuperation du nom de la machine */
 
 	/* recuperation de la structure d'adresse en utilisant le nom */
@@ -171,22 +165,26 @@ int main(int argc, char **argv) {
 
 	longueur_adresse_courante = sizeof(adresse_client_courant);
 
-	pthread_t threads[];
-	int size_threads;
+	// Thread gérant les nouveaux joueurs.
+	pthread_t t_nouveauClient;
+	pthread_create(&t_nouveauClient, NULL, nouveauClient, NULL);
+
 	/* attente des connexions et traitement des donnees recues */
 	for (;;) {
-		// reception des données
-		/* TODO J'ai toujours pas trouvé comment organiser le truc.
-		 * En gros faut qu'on est un thread qui s'occupe des connexions et des threads pour recevoir les données des clients
-		 * Puis, on synchronise : on attends la fin de tous les threads, comme ça on est sur d'avoir reçu tous les coups des joueurs
-		 */
-		pthread_t t, t2;
-		pthread_create(&t, NULL, nouveauClient, &nouv_socket_descriptor);
-		pthread_create(&t2, NULL, reception, &nouv_socket_descriptor);
+
+		// reception des coups joués par les joueurs
+		pthread_t t;
+		pthreads_t threads[NB_MAX_JOUEURS];
+		int nbThreads = 0;
+		int i;
+		for(i=0 ; i < nbJoueurs ; i++) {
+			pthread_create(&t, NULL, reception, &joueurs[i].socket);
+			threads[nbThreads] = t;
+			++nbThreads;
+		}
 
 		// Synchronisation
-		int i;
-		for(i=0 ; i < size_threads ; i++) {
+		for (i = 0; i < nbThreads; i++) {
 			pthread_join(&threads[i]);
 		}
 

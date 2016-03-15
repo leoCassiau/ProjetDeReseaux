@@ -57,7 +57,6 @@ Datagramme readDatagramme() {
 
 bool sendNouveauJoueur(Joueur joueur) {
 	Datagramme data;
-	data.etat = nouveauJoueur;
 	data.joueur = joueur;
 	sendDatagramme(data);
 	data = readDatagramme();
