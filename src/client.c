@@ -14,7 +14,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <pthread.h>	// Parallelisation
-
+#include <time.h>
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
@@ -32,12 +32,15 @@ Joueur joueurClient;	// Etat du client actuel
 
 void sendDatagramme(Datagramme data) {
 	printf("Envoi d'un datagramme...\n");
-
+	int longueur=write(socket_descriptor, &data, sizeof(Datagramme));
 	/* envoi du message vers le serveur */
-	if ((write(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+	if ((longueur < 0)) {
 		perror("erreur : impossible d'ecrire le message destine au serveur.");
 		exit(1);
-	}
+	}else if ((longueur== 0)) {
+		perror("erreur : La socket d'envoi a ete fermee.");
+		exit(1);
+	}else
 
 	printf("Datagramme envoyé.");
 }
@@ -45,9 +48,12 @@ void sendDatagramme(Datagramme data) {
 Datagramme readDatagramme() {
 	Datagramme data;
 	
-	
-	if ((read(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+	int longueur=read(socket_descriptor, &data, sizeof(Datagramme));
+	if ((longueur< 0)) {
 		perror("erreur : impossible de lire le message recu.");
+		exit(1);
+	}else if ((longueur== 0)) {
+		perror("erreur : La socket de reception a ete fermee.");
 		exit(1);
 	}
 	
@@ -63,6 +69,7 @@ bool sendNouveauJoueur(Joueur joueur) {
 		perror("erreur : impossible de se connecter au serveur.");
 		exit(1);
 	}
+	printf("socketdescriptor: %d",socket_descriptor);
 	sendDatagramme(data);
 	
 	data = readDatagramme();
@@ -144,7 +151,16 @@ int main(int argc, char **argv) {
 				"erreur : impossible de creer la socket de connexion avec le serveur.");
 		exit(1);
 	}
+	struct timeval t;    
+ t.tv_sec = 0;
+ t.tv_usec = 0;
 
+	if( setsockopt(socket_descriptor, SOL_SOCKET,  SO_RCVTIMEO,(void *)(&t), sizeof(t)) < 0)
+		{
+		printf("socket failed\n");
+		close(socket_descriptor);
+		exit(2);
+		}	
 	// Creation du joueur
 	printf("\n****************** SHIFUMI ******************\n");
 	printf("Bienvenu(e) %s !\n", pseudo);
@@ -158,11 +174,15 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	
-	//printf(" Tu as le num de socket: %d\n",joueurClient.socket);
+	
 	//	Deroulement du jeu
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
+		joueurClient=data.joueur;
+		printf(" Tu as le num de socket: %d\n",joueurClient.socket);
+		printf(" Ton nom est: %s\n",joueurClient.nom);
+		printf(" Ton score est: %d\n",joueurClient.score);
 		if (data.etat == enAttente) {
 			printf("En attente d'un deuxieme joueur... \n");
 			data = readDatagramme();
@@ -181,9 +201,9 @@ int main(int argc, char **argv) {
 				if (rangDefenseur >= data.nbJoueurs) {
 					rangDefenseur = 0;
 				}
-				printf("%s a défendu votre coup avec : %s.\n",
-						data.joueurs[rangDefenseur].nom,
-						coupToString(data.joueurs[rangDefenseur].coup));
+				//printf("%s a défendu votre coup avec : %s.\n",
+				//		data.joueurs[rangDefenseur].nom,
+				//		coupToString(data.joueurs[rangDefenseur].coup));
 
 				// Résultat de votre coup sur le défenseur
 				if (data.joueurs[rangDefenseur].enVie) {
@@ -197,9 +217,9 @@ int main(int argc, char **argv) {
 				if (rangAttaquant < 0) {
 					rangAttaquant = data.nbJoueurs - 1;
 				}
-				printf("%s vous a attaqué avec : %s.\n",
-						data.joueurs[rangAttaquant].nom,
-						coupToString(data.joueurs[rangAttaquant].coup));
+				//printf("%s vous a attaqué avec : %s.\n",
+				//		data.joueurs[rangAttaquant].nom,
+				//		coupToString(data.joueurs[rangAttaquant].coup));
 
 				// Résultat de votre coup sur l'attaquant
 				if (data.joueur.enVie) {
@@ -235,18 +255,18 @@ int main(int argc, char **argv) {
 
 			// Si le client gagne
 			if (data.joueur.rang == joueurClient.rang) {
-				printf("BRAVO !! Vous avez gagné la partie.\n");
+			//	printf("BRAVO !! Vous avez gagné la partie.\n");
 				++joueurClient.score;
 			}
 
 			// Si le client a perdu
 			else {
-				printf("%s a gagné la partie !\n", data.joueur.nom);
-				printf("%s a maintenant un score de %d.\n", data.joueur.nom,
-						data.joueur.score);
+			//	printf("%s a gagné la partie !\n", data.joueur.nom);
+			//	printf("%s a maintenant un score de %d.\n", data.joueur.nom,
+			//			data.joueur.score);
 			}
 
-			printf("Votre score actuel est de %s.\n", joueurClient.score);
+			//printf("Votre score actuel est de %s.\n", joueurClient.score);
 			data.etat = nouvellePartie;
 		}
 
@@ -262,7 +282,7 @@ int main(int argc, char **argv) {
 
 				// Le joueur joue avec un timeout de 10sc, le temps la réponse du joueur
 				pthread_t t;
-				pthread_create(&t, NULL, jouer, NULL);
+				pthread_create(&t, NULL, &jouer, NULL);
 				sleep(10);
 				pthread_cancel(t);
 

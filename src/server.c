@@ -13,7 +13,7 @@
 #include <linux/types.h> 	/* pour les sockets */
 #include <sys/socket.h>
 #include <netdb.h> 		/* pour hostent, servent */
-#include <signal.h>     /* Pour ignorer le signal SIGPIPE(de la merde)*/
+#include <time.h>
 typedef struct sockaddr sockaddr;
 typedef struct sockaddr_in sockaddr_in;
 typedef struct hostent hostent;
@@ -68,21 +68,28 @@ bool removeJoueur(Joueur j) {
 }
 
 /*  ----------------- fonctions pour communiquer avec le client  ----------------- */
-Datagramme readDatagramme(int  socket_descriptor) {
+Datagramme readDatagramme(int  socket) {
 	Datagramme data;
-	int longueur;
-	if ((read(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
-		perror("erreur : impossible de lire le message provenant du client\n");
+	int longueur=read(socket, &data, sizeof(Datagramme));
+	if (longueur == 0) {
+		perror("erreur : La socket de reception a ete fermee\n");
 		exit(1);
-	}
+	}else if(longueur<0){
+		perror("erreur: Impossible de lire le datagramme\n");
+		exit(1);
+	}else
 	
 	return data;
 }
 
+
 void writeDatagramme(int socket_descriptor, Datagramme data) {
-	//signal(SIGPIPE, SIG_IGN);//Ignorer le signal SIGPIPE
-	if ((write(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+	int longueur=write(socket_descriptor, &data, sizeof(Datagramme));
+	if ((longueur <0)) {
 		perror("erreur : impossible d'ecrire le message destine au client\n");
+		exit(1);
+	}else if ((longueur == 0)) {
+		perror("erreur : La socket d'envoi a ete fermee\n");
 		exit(1);
 	}
 	
@@ -91,7 +98,7 @@ void writeDatagramme(int socket_descriptor, Datagramme data) {
 void * nouveauClient(void * n) {
 	
 	int nouv_socket_descriptor; /* [nouveau] descripteur de socket */
-
+	
 	/* adresse_client_courant sera renseignÃ© par accept via les infos du connect */
 	if ((nouv_socket_descriptor = accept(socket_descriptor,
 			(sockaddr*) (&adresse_client_courant), &longueur_adresse_courante))
@@ -99,7 +106,7 @@ void * nouveauClient(void * n) {
 		perror("erreur : impossible d'accepter la connexion avec le client.\n");
 		exit(1);
 	}
-	
+
 	// Ajout du client en tant que joueur de la partie
 	Datagramme data = readDatagramme(nouv_socket_descriptor);
 	data.joueur.socket=nouv_socket_descriptor;
@@ -111,7 +118,7 @@ void * nouveauClient(void * n) {
 	printf("Ajout du joueur : %s.\n", data.joueur.nom);
 	printf("Connection avec la socket: %d \n",data.joueur.socket);
 	printf("Il y a actuellement %d joueurs \n",nbJoueurs);
-	
+	result.joueur=joueurs[nbJoueurs-1];
 	if(result.partiePleine){
 		printf("DEBUG: La partie est pleine \n");
 		}
@@ -136,16 +143,17 @@ void * nouveauClient(void * n) {
 
 void * reception(void * n) {
 	// Reception du datagramme
-	int  nouv_socket_descriptor = (int) n;
+	int *  nouv_socket_descriptor = (int*) n;
 	
-	Datagramme data = readDatagramme(nouv_socket_descriptor);
-	printf("Tentative de lecture depuis la socket: %d ...\n",data.joueur.socket);
+	printf("DEBUG: socket %d \n", *nouv_socket_descriptor);
+	Datagramme data = readDatagramme(*nouv_socket_descriptor);
+	
 	
 	// Mise à jour du joueur
 	printf("%s a joue le coup : %s.\n", data.joueur.nom,
 			coupToString(data.joueur.coup));
 	joueurs[data.joueur.rang] = data.joueur;
-				
+			
 	}
 
 /* ----------------- main ----------------- */
@@ -172,6 +180,11 @@ int main(int argc, char **argv) {
 	printf("numero de port pour la connexion au serveur : %d \n",
 			ntohs(adresse_locale.sin_port) /*ntohs(ptr_service->s_port)*/);
 
+		
+	
+
+	
+	/* attente des connexions et traitement des donnees recues */
 	/* creation de la socket */
 	if ((socket_descriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		perror(
@@ -186,29 +199,40 @@ int main(int argc, char **argv) {
 				"erreur : impossible de lier la socket a l'adresse de connexion.");
 		exit(1);
 	}
+	 struct timeval t;    
+ t.tv_sec = 0;
+ t.tv_usec = 0;
 
+	if( setsockopt(socket_descriptor, SOL_SOCKET,  SO_RCVTIMEO,(void *)(&t), sizeof(t)) < 0)
+		{
+		printf("socket failed\n");
+		close(socket_descriptor);
+		exit(2);
+		}	
 	/* initialisation de la file d'ecoute */
-	listen(socket_descriptor, 256);
+	listen(socket_descriptor, 5);
 
 	longueur_adresse_courante = sizeof(adresse_client_courant);
-
-	
 	// Thread gérant les nouveaux joueurs.
 		
-		
-	/* attente des connexions et traitement des donnees recues */
+	pthread_t t_nouveauClient;
 	for (;;) {
 		
-        pthread_t t_nouveauClient;
         
+        
+		if(nbJoueurs<2){
+	
 
-        if(pthread_create(&t_nouveauClient, NULL, nouveauClient, NULL)) {
+	
+			
+        if(pthread_create(&t_nouveauClient, NULL, &nouveauClient, NULL)) {
 			
 			continue;
 		}
-        pthread_join(t_nouveauClient, NULL);
-		
-		
+		//sleep(0.01);
+       // pthread_cancel(t_nouveauClient);
+		pthread_join(t_nouveauClient,NULL);
+		}else{
 		
 		
 		// reception des coups joués par les joueurs
@@ -216,20 +240,23 @@ int main(int argc, char **argv) {
 		pthread_t threads[NB_MAX_JOUEURS];
 		int nbThreads = 0;
 		int i;
-		if(nbJoueurs>=2){
-			printf("oheoheoheee\n");
-		for(i=0 ; i < nbJoueurs ; i++) {
-			if(joueurs[i].enVie){
+		
 			
-			pthread_create(&t, NULL, reception, &joueurs[i].socket);
+		for(i=0 ; i < nbJoueurs ; i++) {
+			
+			
+			pthread_create(&t, NULL, &reception, &joueurs[i].socket);
 			threads[nbThreads] = t;
 			++nbThreads;
-			}
+				
+			
 		}
-
+		printf("nb de thread: %d \n",nbThreads);
 		// Synchronisation
 		for (i = 0; i < nbThreads; i++) {
+			printf("synchronisation\n");
 			pthread_join(threads[i],NULL);
+			
 		}
 
 		// On fait jouer les joueurs entre eux
@@ -252,12 +279,17 @@ int main(int argc, char **argv) {
 			data.joueurs[counter] = joueurs[counter];
 			}
 			data.nbJoueurs = nbJoueurs;
-			writeDatagramme(joueurs[i].socket, data);
+			for(counter=0;counter<=nbJoueurs;counter++){
+			if(joueurs[i].enVie){	
+			data.joueur = joueurs[counter];
+			//writeDatagramme(joueurs[i].socket, data);
+				}
+			}
 		}
 		
 	}
 	
 	}
-
+	
 	return 0;
 }
