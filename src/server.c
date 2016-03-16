@@ -41,6 +41,7 @@ bool addJoueur(Joueur joueur) {
 	}
 
 	// Ajout du nouveau joueur dans la liste
+	joueur.rang = nbJoueurs;
 	joueurs[nbJoueurs] = joueur;
 	++nbJoueurs;
 	
@@ -67,16 +68,24 @@ bool removeJoueur(Joueur j) {
 }
 
 /*  ----------------- fonctions pour communiquer avec le client  ----------------- */
-Datagramme readDatagramme(int * socket_descriptor) {
+Datagramme readDatagramme(int  socket_descriptor) {
 	Datagramme data;
 	int longueur;
-	read(socket_descriptor, &data, sizeof(Datagramme));
+	if ((read(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+		perror("erreur : impossible de lire le message provenant du client\n");
+		exit(1);
+	}
+	
 	return data;
 }
 
-void writeDatagramme(int  socket_descriptor, Datagramme data) {
-	signal(SIGPIPE, SIG_IGN);//Ignorer le signal SIGPIPE
-	write(socket_descriptor, &data, sizeof(Datagramme));
+void writeDatagramme(int socket_descriptor, Datagramme data) {
+	//signal(SIGPIPE, SIG_IGN);//Ignorer le signal SIGPIPE
+	if ((write(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+		perror("erreur : impossible d'ecrire le message destine au client\n");
+		exit(1);
+	}
+	
 }
 
 void * nouveauClient(void * n) {
@@ -87,46 +96,57 @@ void * nouveauClient(void * n) {
 	if ((nouv_socket_descriptor = accept(socket_descriptor,
 			(sockaddr*) (&adresse_client_courant), &longueur_adresse_courante))
 			< 0) {
-		perror("erreur : impossible d'accepter la connexion avec le client.");
+		perror("erreur : impossible d'accepter la connexion avec le client.\n");
 		exit(1);
 	}
-
+	
 	// Ajout du client en tant que joueur de la partie
 	Datagramme data = readDatagramme(nouv_socket_descriptor);
-	printf("Ajout du joueur : %s.\n", data.joueur.nom);
+	data.joueur.socket=nouv_socket_descriptor;
 
 	// Ajout du joueur et vérifie si la partie est pleine
 	Datagramme result;
 	result.partiePleine = !addJoueur(data.joueur);
+	
+	printf("Ajout du joueur : %s.\n", data.joueur.nom);
+	printf("Connection avec la socket: %d \n",data.joueur.socket);
+	printf("Il y a actuellement %d joueurs \n",nbJoueurs);
+	
 	if(result.partiePleine){
-		printf("DEBUG: erreur ds addJoueur/n");
+		printf("DEBUG: La partie est pleine \n");
 		}
 	// Vérifie l'état de la partie
 	if (nbJoueurs < 2) { // Attends un deuxieme joueur
 		result.etat = enAttente;
+		printf("DEBUG: Envoi de l'etat enAttente. \n");
 	} else if (nbJoueurs == 2) { // Debut du jeu
 		result.etat = nouvellePartie;
-		
+		printf("DEBUG: Envoi de l'etat nouvellePartie. \n");
 		writeDatagramme(joueurs[0].socket, result);
 	} else { // Affichage du tour en cours
 		result.etat = finTour;
+		printf("DEBUG: Envoi de l'etat finTour. \n");
 	}
 
-	// Envoie du datagramme
+	// Envoi du datagramme
 	
-	writeDatagramme(nouv_socket_descriptor, result);
+	writeDatagramme(data.joueur.socket, result);//1er envoi verifie que la partie est non pleine
+	writeDatagramme(data.joueur.socket, result);//2e envoi, premiere reception dans la boucle client
 }
 
 void * reception(void * n) {
 	// Reception du datagramme
-	int * nouv_socket_descriptor = (int*) n;
+	int  nouv_socket_descriptor = (int) n;
+	
 	Datagramme data = readDatagramme(nouv_socket_descriptor);
-
+	printf("Tentative de lecture depuis la socket: %d ...\n",data.joueur.socket);
+	
 	// Mise à jour du joueur
-	printf("%s a joué le coup : %s.\n", data.joueur.nom,
+	printf("%s a joue le coup : %s.\n", data.joueur.nom,
 			coupToString(data.joueur.coup));
 	joueurs[data.joueur.rang] = data.joueur;
-}
+				
+	}
 
 /* ----------------- main ----------------- */
 int main(int argc, char **argv) {
@@ -135,7 +155,7 @@ int main(int argc, char **argv) {
 	/* recuperation de la structure d'adresse en utilisant le nom */
 	if ((ptr_hote = gethostbyname(machine)) == NULL) {
 		perror(
-				"erreur : impossible de trouver le serveur a partir de son nom.");
+				"erreur : impossible de trouver le serveur a partir de son nom.\n");
 		exit(1);
 	}
 
@@ -168,31 +188,48 @@ int main(int argc, char **argv) {
 	}
 
 	/* initialisation de la file d'ecoute */
-	listen(socket_descriptor, 5);
+	listen(socket_descriptor, 256);
 
 	longueur_adresse_courante = sizeof(adresse_client_courant);
 
-	// Thread gérant les nouveaux joueurs.
-	pthread_t t_nouveauClient;
-	pthread_create(&t_nouveauClient, NULL, nouveauClient, NULL);
 	
+	// Thread gérant les nouveaux joueurs.
+		
+		
 	/* attente des connexions et traitement des donnees recues */
 	for (;;) {
+		
+        pthread_t t_nouveauClient;
+        
+
+        if(pthread_create(&t_nouveauClient, NULL, nouveauClient, NULL)) {
+			
+			continue;
+		}
+        pthread_join(t_nouveauClient, NULL);
+		
+		
+		
 		
 		// reception des coups joués par les joueurs
 		pthread_t t;
 		pthread_t threads[NB_MAX_JOUEURS];
 		int nbThreads = 0;
 		int i;
+		if(nbJoueurs>=2){
+			printf("oheoheoheee\n");
 		for(i=0 ; i < nbJoueurs ; i++) {
+			if(joueurs[i].enVie){
+			
 			pthread_create(&t, NULL, reception, &joueurs[i].socket);
 			threads[nbThreads] = t;
 			++nbThreads;
+			}
 		}
 
 		// Synchronisation
 		for (i = 0; i < nbThreads; i++) {
-			pthread_join(&threads[i],NULL);
+			pthread_join(threads[i],NULL);
 		}
 
 		// On fait jouer les joueurs entre eux
@@ -218,6 +255,8 @@ int main(int argc, char **argv) {
 			writeDatagramme(joueurs[i].socket, data);
 		}
 		
+	}
+	
 	}
 
 	return 0;

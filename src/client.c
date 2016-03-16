@@ -33,13 +33,6 @@ Joueur joueurClient;	// Etat du client actuel
 void sendDatagramme(Datagramme data) {
 	printf("Envoi d'un datagramme...\n");
 
-	/* tentative de connexion au serveur dont les infos sont dans adresse_locale */
-	if ((connect(socket_descriptor, (sockaddr*) (&adresse_locale),
-			sizeof(adresse_locale))) < 0) {
-		perror("erreur : impossible de se connecter au serveur.");
-		exit(1);
-	}
-
 	/* envoi du message vers le serveur */
 	if ((write(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
 		perror("erreur : impossible d'ecrire le message destine au serveur.");
@@ -51,15 +44,31 @@ void sendDatagramme(Datagramme data) {
 
 Datagramme readDatagramme() {
 	Datagramme data;
-	read(socket_descriptor, &data, sizeof(Datagramme));
+	
+	
+	if ((read(socket_descriptor, &data, sizeof(Datagramme)) < 0)) {
+		perror("erreur : impossible de lire le message recu.");
+		exit(1);
+	}
+	
 	return data;
 }
 
 bool sendNouveauJoueur(Joueur joueur) {
 	Datagramme data;
 	data.joueur = joueur;
+	/* tentative de connexion au serveur dont les infos sont dans adresse_locale */
+	if ((connect(socket_descriptor, (sockaddr*) (&adresse_locale),
+			sizeof(adresse_locale))) < 0) {
+		perror("erreur : impossible de se connecter au serveur.");
+		exit(1);
+	}
 	sendDatagramme(data);
+	
 	data = readDatagramme();
+	if (data.partiePleine){
+		printf("DEBUG: la partie est pleine \n");
+	}
 	return data.partiePleine;
 }
 
@@ -70,12 +79,12 @@ Joueur creerJoueur(const char * pseudo) {
 	j.enVie = false;
 	j.coup = rien;
 	j.absent = false;
-	j.socket = socket_descriptor;
+	//j.socket = socket_descriptor;
 
 	return j;
 }
 
-void * jouer() {
+void * jouer(void * n) {
 	char coup[256];
 	bool fin = false;
 	do {
@@ -141,25 +150,26 @@ int main(int argc, char **argv) {
 	printf("Bienvenu(e) %s !\n", pseudo);
 	joueurClient = creerJoueur(pseudo);
 	printf("Connection au serveur en cours...");
-	if (!sendNouveauJoueur(joueurClient)) {
+	if (sendNouveauJoueur(joueurClient)) {
 		printf(
 				"\nLa limite de %d joueurs est atteinte. Veuillez réessayer plus tard...\n",
 				NB_MAX_JOUEURS);
+				
 		return 0;
 	}
-	printf(" Ok\n");
-
+	
+	//printf(" Tu as le num de socket: %d\n",joueurClient.socket);
 	//	Deroulement du jeu
 	for (;;) {
+		
 		Datagramme data = readDatagramme();
-
 		if (data.etat == enAttente) {
 			printf("En attente d'un deuxieme joueur... \n");
 			data = readDatagramme();
 		}
 
 		if (data.etat == finTour) {
-			afficheJoueurs(data.joueurs, data.nbJoueurs);
+			//afficheJoueurs(data.joueurs, data.nbJoueurs);
 			if (joueurClient.enVie) {
 
 				// Affichage de votre coup
@@ -252,8 +262,8 @@ int main(int argc, char **argv) {
 
 				// Le joueur joue avec un timeout de 10sc, le temps la réponse du joueur
 				pthread_t t;
-				pthread_create(&t, NULL, jouer(), NULL);
-				sleep(10000);
+				pthread_create(&t, NULL, jouer, NULL);
+				sleep(10);
 				pthread_cancel(t);
 
 				// Notifie les joueurs absents
@@ -270,8 +280,10 @@ int main(int argc, char **argv) {
 
 		if (joueurClient.absent) {
 			printf("Vous êtes absent, bye bye.\n");
+			close(socket_descriptor);
 			return 0;
 		}
 	}
+	close(socket_descriptor);
 	return 0;
 }
