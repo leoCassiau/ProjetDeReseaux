@@ -62,7 +62,6 @@ const char* coupToString(coup c) {
 	if(c==pierre) { return "pierre";}
 	else if (c == feuille) { return "feuille";}
 	else if (c == ciseaux) { return "ciseaux";}
-	else if (c == rien) { return "rien";}
 	else { return "COUP_ERROR";}
 }
 
