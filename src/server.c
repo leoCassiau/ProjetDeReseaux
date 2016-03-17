@@ -69,30 +69,32 @@ bool removeJoueur(Joueur j) {
 
 /*  ----------------- fonctions pour communiquer avec le client  ----------------- */
 Datagramme readDatagramme(int  socket) {
-    Datagramme data;
-    int longueur=read(socket, &data, sizeof(Datagramme));
-    if (longueur == 0) {
-        perror("erreur : La socket de reception a ete fermee\n");
-        exit(1);
-    }else if(longueur<0){
-        perror("erreur: Impossible de lire le datagramme\n");
-        exit(1);
-    }else
 
-        return data;
+	Datagramme data;
+	
+	int longueur=recv(socket, &data, sizeof(Datagramme),NULL);
+	if (longueur == 0) {
+		perror("erreur : La socket de reception a ete fermee\n");
+		exit(1);
+	}else if(longueur<0){
+		perror("erreur: Impossible de lire le datagramme\n");
+		exit(1);
+	}else
+	
+	return data;
+
 }
 
 
 void writeDatagramme(int socket_descriptor, Datagramme data) {
-    int longueur=write(socket_descriptor, &data, sizeof(Datagramme));
-    if ((longueur <0)) {
-        perror("erreur : impossible d'ecrire le message destine au client\n");
-        exit(1);
-    }else if ((longueur == 0)) {
-        perror("erreur : La socket d'envoi a ete fermee\n");
-        exit(1);
-    }
-
+	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
+	if ((longueur <0)) {
+		perror("erreur : impossible d'ecrire le message destine au client\n");
+		exit(1);
+	}else if ((longueur == 0)) {
+		perror("erreur : La socket d'envoi a ete fermee\n");
+		exit(1);
+	}
 }
 
 void * nouveauClient(void * n) {

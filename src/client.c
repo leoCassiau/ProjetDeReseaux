@@ -32,7 +32,7 @@ Joueur joueurClient;	// Etat du client actuel
 
 void sendDatagramme(Datagramme data) {
 	printf("Envoi d'un datagramme...\n");
-	int longueur=write(socket_descriptor, &data, sizeof(Datagramme));
+	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	/* envoi du message vers le serveur */
 	if ((longueur < 0)) {
 		perror("erreur : impossible d'ecrire le message destine au serveur.");
@@ -48,7 +48,7 @@ void sendDatagramme(Datagramme data) {
 Datagramme readDatagramme() {
 	Datagramme data;
 	
-	int longueur=read(socket_descriptor, &data, sizeof(Datagramme));
+	int longueur=recv(socket_descriptor, &data, sizeof(Datagramme),NULL);
 	if ((longueur< 0)) {
 		perror("erreur : impossible de lire le message recu.");
 		exit(1);
