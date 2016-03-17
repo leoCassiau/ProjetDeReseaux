@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
     pthread_create(&t_nouveauClient, NULL, &nouveauClient, NULL);
 	
     for (;;) {
-	while(nbJoueurs<2){}
+while(nbJoueurs<2){}
         // reception des coups joués par les joueurs
         pthread_t t;
         pthread_t threads[NB_MAX_JOUEURS];

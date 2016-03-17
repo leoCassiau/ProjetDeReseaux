@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
 
 				// Notifie les joueurs absents
                 if (data.joueurs[rangClient].coup == rien) {
-                    
+                    printf("KOI\n");
                     data.joueurs[rangClient].absent = true;
 				}
             }
