@@ -20,7 +20,7 @@ typedef enum {
 } coup;
 
 typedef enum {
-	nouvellePartie, finPartie, debutTour, finTour, enAttente
+	nouvellePartie, finPartie, debutTour, finTour, enAttente, erreur
 } etatPartie;
 
 typedef struct {

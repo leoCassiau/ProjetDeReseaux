@@ -35,10 +35,10 @@ void sendDatagramme(Datagramme data) {
 	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	/* envoi du message vers le serveur */
 	if ((longueur < 0)) {
-		perror("erreur : impossible d'ecrire le message destine au serveur.");
+		printf("erreur : impossible d'ecrire le message destine au serveur.");
 		exit(1);
 	}else if ((longueur== 0)) {
-		perror("erreur : La socket d'envoi a ete fermee.");
+		printf("erreur : La socket d'envoi a ete fermee.");
 		exit(1);
     }
 }
@@ -48,10 +48,10 @@ Datagramme readDatagramme() {
 	
 	int longueur=recv(socket_descriptor, &data, sizeof(Datagramme),MSG_WAITALL);
 	if ((longueur< 0)) {
-		perror("erreur : impossible de lire le message recu.");
+		printf("erreur : impossible de lire le message recu.");
 		exit(1);
 	}else if ((longueur== 0)) {
-		perror("erreur : La socket de reception a ete fermee.");
+		printf("erreur : La socket de reception a ete fermee.");
 		exit(1);
 	}
 	
@@ -225,13 +225,15 @@ int main(int argc, char **argv) {
 			int cptEnVie, i, rangDuGagnant;
 			cptEnVie, i = 0;
 			while (cptEnVie < 2 && i < data.nbJoueurs) {
+				
 				if (data.joueurs[i].enVie) {
 					rangDuGagnant = i;
 					++cptEnVie;
+					
 				}
 				++i;
 			}
-
+			printf("Il y a %d joueurs en vie\n",cptEnVie);
 			// Fin de la partie ?
 			if(cptEnVie < 2) {
 				data.etat = finPartie;
@@ -281,12 +283,24 @@ int main(int argc, char **argv) {
 				if (joueurClient.coup == rien) {
 					joueurClient.absent = true;
 				}
-            }
-            sleep(10);
-            // Envoie du coup joué
+				// Envoie du coup joué
             Datagramme dataSend;
             dataSend.joueur = joueurClient;
             sendDatagramme(dataSend);
+            }else if(!joueurClient.enVie){
+				char reponse[2];
+			do{
+			printf(" Voulez-vous rejouer? (y/n) \n");
+			scanf("%2s", reponse);
+			printf("\n");}
+			while(strcmp(reponse,"y")!=0);
+			joueurClient.enVie;
+			
+			printf("Bonne chance ! \n");
+				
+			}
+            
+            
 		}
 
 		if (joueurClient.absent) {
