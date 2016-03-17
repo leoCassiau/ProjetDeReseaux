@@ -162,7 +162,21 @@ void * reception(void * n) {
 	printf("Reception erronee, coup non pris en compte\n");
 
 }
+bool isSocketOpen(int sock){
+	int error = 0;
+	socklen_t len = sizeof (error);
+	int retval = getsockopt (sock, SOL_SOCKET, SO_ERROR, &error, &len);
+	
+	if (retval != 0) {
+		return false;
+	}else
 
+	if (error != 0) {
+		return false;
+	}else
+		return true;
+	
+}
 /* ----------------- main ----------------- */
 int main(int argc, char **argv) {
     gethostname(machine, 256); /* recuperation du nom de la machine */
@@ -221,14 +235,20 @@ int main(int argc, char **argv) {
         pthread_t threads[NB_MAX_JOUEURS];
         int nbThreads = 0;
         int i;
-	
+		
+		
         for(i=0 ; i < nbJoueurs ; i++) {
-	    
+			
+		
+			if(isSocketOpen(joueurs[i].socket)){
 		    //joueurs[i].coup = rien;
 		    pthread_create(&t, NULL, &reception, &joueurs[i].socket);
 		    threads[nbThreads] = t;
 		    ++nbThreads;
-	    
+			}else
+				if(removeJoueur(joueurs[i])){
+					printf("Joueur supprime\n");
+				}
         }
 
         // Synchronisation
@@ -282,7 +302,9 @@ int main(int argc, char **argv) {
         for (i = 0; i < nbJoueurs; i++) {
 		printf("DEBUG joueur nom :%s\n",joueurs[i].nom);
             if (writeDatagramme(joueurs[i].socket, data)<=0){
+				if(removeJoueur(joueurs[i])){
 				printf("DEBUG: Le joueur %s est deconnecte\n",joueurs[i].nom);
+				}
 			}
         }
     }

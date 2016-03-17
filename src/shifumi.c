@@ -44,8 +44,11 @@ typedef struct {
 bool bat(coup c1, coup c2) {
 	if (((c1 == pierre) && (c2 == ciseaux))
 			|| ((c1 == ciseaux) && (c2 == feuille))
-			|| ((c1 == feuille) && (c2 == pierre))) {
+			|| ((c1 == feuille) && (c2 == pierre))
+			|| (c2==rien) ) {
 		return true;
+	}if(c1==rien){
+		return false;
 	}
 	return false;
 }
