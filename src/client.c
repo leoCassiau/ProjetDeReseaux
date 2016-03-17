@@ -42,13 +42,13 @@ void sendDatagramme(Datagramme data) {
 		exit(1);
 	}else
 
-	printf("Datagramme envoyé.");
+	printf("Datagramme envoyé.\n");
 }
 
 Datagramme readDatagramme() {
 	Datagramme data;
 	
-	int longueur=recv(socket_descriptor, &data, sizeof(Datagramme),NULL);
+	int longueur=recv(socket_descriptor, &data, sizeof(Datagramme),MSG_WAITALL);
 	if ((longueur< 0)) {
 		perror("erreur : impossible de lire le message recu.");
 		exit(1);
@@ -171,8 +171,8 @@ int main(int argc, char **argv) {
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
-		joueurClient=data.joueur;
-		printf(" Tu as le num de socket: %d\n",joueurClient.socket);
+		//joueurClient=data.joueurs[joueurClient.rang];
+		//printf(" Tu as le num de socket: %d\n",joueurClient.socket);
 		printf(" Ton nom est: %s\n",joueurClient.nom);
 		printf(" Ton score est: %d\n",joueurClient.score);
 		if (data.etat == enAttente) {
@@ -292,10 +292,10 @@ int main(int argc, char **argv) {
 
 		if (joueurClient.absent) {
 			printf("Vous êtes absent, bye bye.\n");
-			close(socket_descriptor);
+			//close(socket_descriptor);
 			return 0;
 		}
 	}
-	close(socket_descriptor);
+	//close(socket_descriptor);
 	return 0;
 }

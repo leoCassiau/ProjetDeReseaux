@@ -72,7 +72,7 @@ Datagramme readDatagramme(int  socket) {
 
 	Datagramme data;
 	
-	int longueur=recv(socket, &data, sizeof(Datagramme),NULL);
+	int longueur=recv(socket, &data, sizeof(Datagramme),MSG_WAITALL);
 	if (longueur == 0) {
 		perror("erreur : La socket de reception a ete fermee\n");
 		exit(1);
@@ -95,6 +95,7 @@ void writeDatagramme(int socket_descriptor, Datagramme data) {
 		perror("erreur : La socket d'envoi a ete fermee\n");
 		exit(1);
 	}
+	printf("Datagramme envoye \n");
 }
 
 void * nouveauClient(void * n) {
@@ -140,6 +141,7 @@ void * nouveauClient(void * n) {
 
         // Envoi du datagramme
         writeDatagramme(data.joueur.socket, result);//1er envoi verifie que la partie est non pleine
+        writeDatagramme(data.joueur.socket, result);
     }
 }
 
@@ -147,7 +149,7 @@ void * reception(void * n) {
     // Reception du datagramme
     int *  nouv_socket_descriptor = (int*) n;
 
-    printf("DEBUG: socket %d \n", *nouv_socket_descriptor);
+    //printf("DEBUG: socket %d \n", *nouv_socket_descriptor);
     Datagramme data = readDatagramme(*nouv_socket_descriptor);
 
 
@@ -201,16 +203,7 @@ int main(int argc, char **argv) {
                     "erreur : impossible de lier la socket a l'adresse de connexion.");
         exit(1);
     }
-    struct timeval t;
-    t.tv_sec = 0;
-    t.tv_usec = 0;
-
-    if( setsockopt(socket_descriptor, SOL_SOCKET,  SO_RCVTIMEO,(void *)(&t), sizeof(t)) < 0)
-    {
-        printf("socket failed\n");
-        close(socket_descriptor);
-        exit(2);
-    }
+  
     /* initialisation de la file d'ecoute */
     listen(socket_descriptor, 5);
 
@@ -219,7 +212,8 @@ int main(int argc, char **argv) {
     // Thread gérant les nouveaux joueurs.
     pthread_t t_nouveauClient;
     pthread_create(&t_nouveauClient, NULL, &nouveauClient, NULL);
-
+	while(nbJoueurs==0){
+		}
     for (;;) {
 
         // reception des coups joués par les joueurs
@@ -227,17 +221,17 @@ int main(int argc, char **argv) {
         pthread_t threads[NB_MAX_JOUEURS];
         int nbThreads = 0;
         int i;
-
+		
         for(i=0 ; i < nbJoueurs ; i++) {
             pthread_create(&t, NULL, &reception, &joueurs[i].socket);
             threads[nbThreads] = t;
             ++nbThreads;
         }
 
-        printf("nb de thread: %d \n",nbThreads);
+        //printf("nb de thread: %d \n",nbThreads);
         // Synchronisation
         for (i = 0; i < nbThreads; i++) {
-            printf("synchronisation\n");
+           // printf("synchronisation\n");
             pthread_join(threads[i],NULL);
 
         }
@@ -258,15 +252,14 @@ int main(int argc, char **argv) {
             Datagramme data;
             data.etat = finTour;
             int counter;
-            for(counter=0;counter<=nbJoueurs;counter++){
+            for(counter=0;counter<nbJoueurs;counter++){
                 data.joueurs[counter] = joueurs[counter];
             }
             data.nbJoueurs = nbJoueurs;
-            for(counter=0;counter<=nbJoueurs;counter++){
-                if(joueurs[i].enVie){
-                    data.joueur = joueurs[counter];
-                    //writeDatagramme(joueurs[i].socket, data);
-                }
+            for(counter=0;counter<nbJoueurs;counter++){
+                
+                    writeDatagramme(joueurs[i].socket, data);
+                
             }
         }
     }
