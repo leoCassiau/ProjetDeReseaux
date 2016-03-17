@@ -70,7 +70,8 @@ bool removeJoueur(Joueur j) {
 /*  ----------------- fonctions pour communiquer avec le client  ----------------- */
 Datagramme readDatagramme(int  socket) {
 	Datagramme data;
-	int longueur=read(socket, &data, sizeof(Datagramme));
+	
+	int longueur=recv(socket, &data, sizeof(Datagramme),NULL);
 	if (longueur == 0) {
 		perror("erreur : La socket de reception a ete fermee\n");
 		exit(1);
@@ -84,7 +85,7 @@ Datagramme readDatagramme(int  socket) {
 
 
 void writeDatagramme(int socket_descriptor, Datagramme data) {
-	int longueur=write(socket_descriptor, &data, sizeof(Datagramme));
+	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	if ((longueur <0)) {
 		perror("erreur : impossible d'ecrire le message destine au client\n");
 		exit(1);
@@ -282,7 +283,7 @@ int main(int argc, char **argv) {
 			for(counter=0;counter<=nbJoueurs;counter++){
 			if(joueurs[i].enVie){	
 			data.joueur = joueurs[counter];
-			//writeDatagramme(joueurs[i].socket, data);
+			writeDatagramme(joueurs[i].socket, data);
 				}
 			}
 		}
