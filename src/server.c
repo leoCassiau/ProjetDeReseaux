@@ -73,11 +73,14 @@ Datagramme readDatagramme(int  socket) {
     printf("DEBUG socket %d: \n", socket);
 	int longueur=recv(socket, &data, sizeof(Datagramme),MSG_WAITALL);
 	if (longueur == 0) {
-		perror("erreur : La socket de reception a ete fermee\n");
-		exit(1);
+		printf("erreur : La socket de reception a ete fermee\n");
+		data.etat=erreur;
+		return data;
+		
 	}else if(longueur<0){
-		perror("erreur: Impossible de lire le datagramme\n");
-		exit(1);
+		printf("erreur: Impossible de lire le datagramme\n");
+		data.etat=erreur;
+		return data;
 	}else
 	
 	return data;
@@ -85,16 +88,17 @@ Datagramme readDatagramme(int  socket) {
 }
 
 
-void writeDatagramme(int socket_descriptor, Datagramme data) {
-    printf("DEBUG: socket %d \n", socket_descriptor);
+
+int writeDatagramme(int socket_descriptor, Datagramme data) {
 	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	if ((longueur <0)) {
-		perror("erreur : impossible d'ecrire le message destine au client\n");
-		exit(1);
+		printf("erreur : impossible d'ecrire le message destine au client\n");
+		return 0;
 	}else if ((longueur == 0)) {
-		perror("erreur : La socket d'envoi a ete fermee\n");
-		exit(1);
+		printf("erreur : La socket d'envoi a ete fermee\n");
+		return -1;
 	}
+	else return 1;
 }
 
 void * nouveauClient(void * n) {
@@ -151,9 +155,12 @@ void * reception(void * n) {
     Datagramme data = readDatagramme(*nouv_socket_descriptor);
 
     // Mise à jour du joueur
+    if(data.etat!=erreur){
     printf("%s a joue le coup : %s.\n", data.joueur.nom,
            coupToString(data.joueur.coup));
     joueurs[data.joueur.rang] = data.joueur;
+	}else
+	printf("Reception erronee, coup non pris en compte\n");	
 
 }
 
@@ -263,8 +270,9 @@ int main(int argc, char **argv) {
         }
         data.nbJoueurs = nbJoueurs;
         for (i = 0; i < nbJoueurs; i++) {
-            printf("toto\n");
-            writeDatagramme(joueurs[i].socket, data);
+            if (writeDatagramme(joueurs[i].socket, data)<=0){
+				printf("DEBUG: Le joueur %s est deconnecte\n",joueurs[i].nom);
+			}
         }
     }
 
