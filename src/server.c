@@ -44,7 +44,6 @@ bool addJoueur(Joueur joueur) {
     joueurs[nbJoueurs] = joueur;
     ++nbJoueurs;
 
-
     return true;
 }
 
@@ -70,7 +69,8 @@ bool removeJoueur(Joueur j) {
 Datagramme readDatagramme(int  socket) {
 
 	Datagramme data;
-	
+
+    printf("DEBUG socket %d: \n", socket);
 	int longueur=recv(socket, &data, sizeof(Datagramme),MSG_WAITALL);
 	if (longueur == 0) {
 		perror("erreur : La socket de reception a ete fermee\n");
@@ -86,6 +86,7 @@ Datagramme readDatagramme(int  socket) {
 
 
 void writeDatagramme(int socket_descriptor, Datagramme data) {
+    printf("DEBUG: socket %d \n", socket_descriptor);
 	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	if ((longueur <0)) {
 		perror("erreur : impossible d'ecrire le message destine au client\n");
@@ -111,16 +112,17 @@ void * nouveauClient(void * n) {
 
         // Ajout du client en tant que joueur de la partie
         Datagramme data = readDatagramme(nouv_socket_descriptor);
-        data.joueur.socket=nouv_socket_descriptor;
 
         // Ajout du joueur et vérifie si la partie est pleine
         Datagramme result;
         result.partiePleine = !addJoueur(data.joueur);
+        joueurs[nbJoueurs-1].socket=nouv_socket_descriptor;
 
-        printf("Ajout du joueur : %s.\n", data.joueur.nom);
-        printf("Connection avec la socket: %d \n",data.joueur.socket);
+        printf("Ajout du joueur : %s.\n", joueurs[nbJoueurs-1].nom);
+        printf("Connection avec la socket: %d \n",joueurs[nbJoueurs-1].socket);
         printf("Il y a actuellement %d joueurs \n",nbJoueurs);
         result.joueur=joueurs[nbJoueurs-1];
+        result.joueurs[nbJoueurs-1] = joueurs[nbJoueurs-1];
         if(result.partiePleine){
             printf("DEBUG: La partie est pleine \n");
         }
@@ -138,16 +140,14 @@ void * nouveauClient(void * n) {
         }
 
         // Envoi du datagramme
-        writeDatagramme(data.joueur.socket, result);//1er envoi verifie que la partie est non pleine
-        writeDatagramme(data.joueur.socket, result);
+        writeDatagramme(joueurs[nbJoueurs-1].socket, result);//1er envoi verifie que la partie est non pleine
+        writeDatagramme(joueurs[nbJoueurs-1].socket, result);
     }
 }
 
 void * reception(void * n) {
     // Reception du datagramme
     int *  nouv_socket_descriptor = (int*) n;
-
-    //printf("DEBUG: socket %d \n", *nouv_socket_descriptor);
     Datagramme data = readDatagramme(*nouv_socket_descriptor);
 
     // Mise à jour du joueur
@@ -216,48 +216,54 @@ int main(int argc, char **argv) {
         int i;
 		
         for(i=0 ; i < nbJoueurs ; i++) {
+            //joueurs[i].coup = rien;
             pthread_create(&t, NULL, &reception, &joueurs[i].socket);
             threads[nbThreads] = t;
             ++nbThreads;
         }
 
-        //printf("nb de thread: %d \n",nbThreads);
         // Synchronisation
+        //sleep(10);
         for (i = 0; i < nbThreads; i++) {
-           // printf("synchronisation\n");
+           printf("synchronisation\n");
             pthread_join(threads[i],NULL);
-
+            //pthread_cancel(threads[i],NULL);
         }
 
-        Joueur joueursEnVie[NB_MAX_JOUEURS];
-        int nbJoueursEnVie = 0;
+        /* if(joueurs[i].coup == rien) {
+            removeJoueur(joueurs[i]);
+        } */
+        Joueur joueursQuiJoue[NB_MAX_JOUEURS];
+        int nbJoueursQuiJoue = 0;
         for (i = 0; i < nbJoueurs; i++) {
             if(joueurs[i].enVie) {
-                joueursEnVie[nbJoueursEnVie] = joueurs[i];
-                joueursEnVie[nbJoueursEnVie].rang = nbJoueursEnVie;
-                ++nbJoueursEnVie;
+                joueursQuiJoue[nbJoueursQuiJoue] = joueurs[i];
+                ++nbJoueursQuiJoue;
             }
         }
+
         // On fait jouer les joueurs entre eux
-        for (i = 0; i < nbJoueursEnVie; i++) {
+        for (i = 0; i < nbJoueursQuiJoue; i++) {
             int j = i + 1; // j le joueur suivant dans la ronde
 
             // Si i est le dernier joueur, alors il attaque le premier joueur
-            if (i == (nbJoueursEnVie - 1)) {
+            if (j == nbJoueursQuiJoue) {
                 j = 0;
             }
 
-            attaque(&joueursEnVie[i], &joueursEnVie[j]);
+            attaque(&joueursQuiJoue[i], &joueursQuiJoue[j]);
         }
 
         // On informe les joueurs des résultats
         Datagramme data;
         data.etat = finTour;
-        for(i=0;i<nbJoueursEnVie;i++){
-            data.joueurs[i] = joueursEnVie[i];
+        for(i=0;i<nbJoueursQuiJoue;i++){
+            int rang = joueursQuiJoue[i].rang;
+            data.joueurs[rang].enVie = joueursQuiJoue[i].enVie;
         }
-        data.nbJoueurs = nbJoueursEnVie;
+        data.nbJoueurs = nbJoueurs;
         for (i = 0; i < nbJoueurs; i++) {
+            printf("toto\n");
             writeDatagramme(joueurs[i].socket, data);
         }
     }

@@ -28,7 +28,7 @@ servent * ptr_service; /* info sur service */
 char * host; /* adresse de l'hôte*/
 
 // Variables globales pour le déroulement du jeu
-Joueur joueurClient;	// Etat du client actuel
+int rangClient;	// Rang du client actuel
 
 void sendDatagramme(Datagramme data) {
 	printf("Envoi d'un datagramme...\n");
@@ -72,7 +72,7 @@ bool sendNouveauJoueur(Joueur joueur) {
 	sendDatagramme(data);
 	
 	data = readDatagramme();
-    joueurClient = data.joueur;
+    rangClient = data.joueur.rang;
 
 	return data.partiePleine;
 }
@@ -83,13 +83,12 @@ Joueur creerJoueur(const char * pseudo) {
 	j.score = 0;
 	j.enVie = false;
 	j.coup = rien;
-	j.absent = false;
-	//j.socket = socket_descriptor;
+    j.absent = false;
 
 	return j;
 }
 
-void * jouer(void * n) {
+Datagramme jouer(Datagramme data) {
 	char coup[256];
 	bool fin = false;
 	do {
@@ -101,24 +100,27 @@ void * jouer(void * n) {
 		// Pierre
 		if (strcmp(coup, "P") == 0 || strcmp(coup, "p") == 0
 				|| strcmp(coup, "Pierre") == 0) {
-			joueurClient.coup = pierre;
+            data.joueurs[rangClient].coup = pierre;
 			fin = true;
 		}
 
 		// Feuille
 		if (strcmp(coup, "F") == 0 || strcmp(coup, "f") == 0
 				|| strcmp(coup, "Feuille") == 0) {
-			joueurClient.coup = feuille;
+            data.joueurs[rangClient].coup = feuille;
 			fin = true;
 		}
 
 		// Ciseaux
 		if (strcmp(coup, "C") == 0 || strcmp(coup, "c") == 0
 				|| strcmp(coup, "Ciseaux") == 0) {
-			joueurClient.coup = ciseaux;
+            data.joueurs[rangClient].coup = ciseaux;
 			fin = true;
 		}
 	} while (!fin);
+    printf("DEBUG data.jouers[0] socket : %d \n", data.joueurs[0].socket);
+   printf("DEBUG data.jouers[0] rang : %d,  %s \n", rangClient, coupToString(data.joueurs[rangClient].coup));
+    return data;
 }
 
 int main(int argc, char **argv) {
@@ -156,9 +158,8 @@ int main(int argc, char **argv) {
 	// Creation du joueur
 	printf("\n****************** SHIFUMI ******************\n");
 	printf("Bienvenu(e) %s !\n", pseudo);
-	joueurClient = creerJoueur(pseudo);
 	printf("Connection au serveur en cours...");
-	if (sendNouveauJoueur(joueurClient)) {
+    if (sendNouveauJoueur(creerJoueur(pseudo))) {
 		printf(
 				"\nLa limite de %d joueurs est atteinte. Veuillez réessayer plus tard...\n",
 				NB_MAX_JOUEURS);
@@ -171,8 +172,6 @@ int main(int argc, char **argv) {
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
-		printf(" Ton nom est: %s\n",joueurClient.nom);
-		printf(" Ton score est: %d\n",joueurClient.score);
 
 		if (data.etat == enAttente) {
 			printf("En attente d'un deuxieme joueur... \n");
@@ -181,14 +180,14 @@ int main(int argc, char **argv) {
 
 		if (data.etat == finTour) {
             afficheJoueurs(data.joueurs, data.nbJoueurs);
-			if (joueurClient.enVie) {
+            if (data.joueurs[rangClient].enVie) {
 
 				// Affichage de votre coup
 				printf("%Vous avez joué : %s.\n",
-						coupToString(joueurClient.coup));
+                        coupToString(data.joueurs[rangClient].coup));
 
 				// Affichage du coup du défenseur
-				int rangDefenseur = joueurClient.rang + 1;
+                int rangDefenseur = data.joueurs[rangClient].rang + 1;
 				if (rangDefenseur >= data.nbJoueurs) {
 					rangDefenseur = 0;
 				}
@@ -204,7 +203,7 @@ int main(int argc, char **argv) {
 				}
 
 				// Affichage du coup de l'attaquant
-				int rangAttaquant = joueurClient.rang - 1;
+                int rangAttaquant = data.joueurs[rangClient].rang - 1;
 				if (rangAttaquant < 0) {
 					rangAttaquant = data.nbJoueurs - 1;
 				}
@@ -213,27 +212,26 @@ int main(int argc, char **argv) {
                         coupToString(data.joueurs[rangAttaquant].coup));
 
 				// Résultat de votre coup sur l'attaquant
-				if (data.joueur.enVie) {
+                if (data.joueurs[rangClient].enVie) {
 					printf("Ouf, vous avez survécu.\n");
 				} else {
 					printf("Arf, vous avez perdu.\n");
-					joueurClient.enVie = false;
 				}
             }
 
-			// On compte le nombre de joueurs en vie
-			int cptEnVie, i, rangDuGagnant;
-			cptEnVie, i = 0;
-			while (cptEnVie < 2 && i < data.nbJoueurs) {
-				if (data.joueurs[i].enVie) {
-					rangDuGagnant = i;
-					++cptEnVie;
-				}
-				++i;
-			}
+            // On compte le nombre de joueurs en vie
+            int cptEnVie, i, rangDuGagnant;
+            cptEnVie, i = 0;
+            while (cptEnVie < 2 && i < data.nbJoueurs) {
+                if (data.joueurs[i].enVie) {
+                    rangDuGagnant = i;
+                    ++cptEnVie;
+                }
+                ++i;
+            }
 
 			// Fin de la partie ?
-			if(cptEnVie < 2) {
+            if(cptEnVie < 2) {
 				data.etat = finPartie;
 				data.joueur = data.joueurs[rangDuGagnant];
 			} else {
@@ -245,9 +243,9 @@ int main(int argc, char **argv) {
 			printf("\n--- Fin de la partie ---\n");
 
 			// Si le client gagne
-			if (data.joueur.rang == joueurClient.rang) {
+            if (data.joueur.rang == data.joueurs[rangClient].rang) {
 			//	printf("BRAVO !! Vous avez gagné la partie.\n");
-				++joueurClient.score;
+                ++data.joueurs[rangClient].score;
 			}
 
 			// Si le client a perdu
@@ -257,39 +255,36 @@ int main(int argc, char **argv) {
                         data.joueur.score);
 			}
 
-            printf("Votre score actuel est de %d.\n", joueurClient.score);
+            printf("Votre score actuel est de %d.\n", data.joueurs[rangClient].score);
 			data.etat = nouvellePartie;
 		}
 
 		if (data.etat == nouvellePartie) {
 			printf("\n------------- Nouvelle partie -------------\n");
-			joueurClient.enVie = true;
+            data.joueurs[rangClient].enVie = true;
 			data.etat = debutTour;
 		}
 
 		if (data.etat == debutTour) {
-            joueurClient.coup = rien;
-			if (joueurClient.enVie) {
+            data.joueurs[rangClient].coup = rien;
+            if (data.joueurs[rangClient].enVie) {
 
 				// Le joueur joue avec un timeout de 10sc, le temps la réponse du joueur
-                pthread_t t;
-                pthread_create(&t, NULL, &jouer, NULL);
-                sleep(10);
-                pthread_cancel(t);
+                data = jouer(data);
 
 				// Notifie les joueurs absents
-				if (joueurClient.coup == rien) {
-					joueurClient.absent = true;
+                if (data.joueurs[rangClient].coup == rien) {
+                    printf("KOI\n");
+                    data.joueurs[rangClient].absent = true;
 				}
             }
-            sleep(10);
+
             // Envoie du coup joué
-            Datagramme dataSend;
-            dataSend.joueur = joueurClient;
-            sendDatagramme(dataSend);
+            data.joueur = data.joueurs[rangClient];
+            sendDatagramme(data);
 		}
 
-		if (joueurClient.absent) {
+        if (data.joueurs[rangClient].absent) {
 			printf("Vous êtes absent, bye bye.\n");
 			//close(socket_descriptor);
 			return 0;
