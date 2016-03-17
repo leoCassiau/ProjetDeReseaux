@@ -73,6 +73,7 @@ bool sendNouveauJoueur(Joueur joueur) {
 	sendDatagramme(data);
 	
 	data = readDatagramme();
+    joueurClient = data.joueur;
 	if (data.partiePleine){
 		printf("DEBUG: la partie est pleine \n");
 	}
@@ -151,16 +152,7 @@ int main(int argc, char **argv) {
 				"erreur : impossible de creer la socket de connexion avec le serveur.");
 		exit(1);
 	}
-	struct timeval t;    
- t.tv_sec = 0;
- t.tv_usec = 0;
 
-	if( setsockopt(socket_descriptor, SOL_SOCKET,  SO_RCVTIMEO,(void *)(&t), sizeof(t)) < 0)
-		{
-		printf("socket failed\n");
-		close(socket_descriptor);
-		exit(2);
-		}	
 	// Creation du joueur
 	printf("\n****************** SHIFUMI ******************\n");
 	printf("Bienvenu(e) %s !\n", pseudo);
