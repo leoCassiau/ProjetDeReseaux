@@ -59,7 +59,7 @@ bool attaque(Joueur * j1, Joueur * j2) {
 }
 
 const char* coupToString(coup c) {
-	if(c==pierre) { return "pierre";}
+	if(c==pierre) { return "pierre ";}
 	else if (c == feuille) { return "feuille";}
 	else if (c == ciseaux) { return "ciseaux";}
 	else if (c == rien) { return "rien";}

@@ -213,24 +213,28 @@ int main(int argc, char **argv) {
     pthread_create(&t_nouveauClient, NULL, &nouveauClient, NULL);
 	
     for (;;) {
+	// On attends 2 joueurs
 	while(nbJoueurs<2){}
+
         // reception des coups joués par les joueurs
         pthread_t t;
         pthread_t threads[NB_MAX_JOUEURS];
         int nbThreads = 0;
         int i;
-
+	
         for(i=0 ; i < nbJoueurs ; i++) {
-            //joueurs[i].coup = rien;
-            pthread_create(&t, NULL, &reception, &joueurs[i].socket);
-            threads[nbThreads] = t;
-            ++nbThreads;
+	    
+		    //joueurs[i].coup = rien;
+		    pthread_create(&t, NULL, &reception, &joueurs[i].socket);
+		    threads[nbThreads] = t;
+		    ++nbThreads;
+	    
         }
 
         // Synchronisation
         sleep(20);
         for (i = 0; i < nbThreads; i++) {
-            pthread_join(threads[i],NULL);
+            pthread_join(threads[i], NULL);
 	    printf("synchronisation\n");
             //pthread_cancel(threads[i],NULL);
         }

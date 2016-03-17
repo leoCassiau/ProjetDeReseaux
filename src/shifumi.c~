@@ -20,7 +20,7 @@ typedef enum {
 } coup;
 
 typedef enum {
-	nouvellePartie, finPartie, debutTour, finTour, enAttente
+	nouvellePartie, finPartie, debutTour, finTour, enAttente, erreur
 } etatPartie;
 
 typedef struct {
@@ -62,6 +62,7 @@ const char* coupToString(coup c) {
 	if(c==pierre) { return "pierre";}
 	else if (c == feuille) { return "feuille";}
 	else if (c == ciseaux) { return "ciseaux";}
+	else if (c == rien) { return "rien";}
 	else { return "COUP_ERROR";}
 }
 

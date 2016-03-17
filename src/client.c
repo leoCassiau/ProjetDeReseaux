@@ -220,10 +220,12 @@ int main(int argc, char **argv) {
             }
 
 			// On compte le nombre de joueurs en vie
-			int cptEnVie, i, rangDuGagnant;
-			cptEnVie, i = 0;
+			int cptEnVie = 0;
+int i, rangDuGagnant;
+			i = 0;
 			while (cptEnVie < 2 && i < data.nbJoueurs) {
-				
+				printf("DEBUG nom : %s, enVie : %d, nbJoueur : %d, cptEnVie : %d\n",
+					data.joueurs[i].nom, data.joueurs[i].enVie, data.nbJoueurs, cptEnVie);
 				if (data.joueurs[i].enVie) {
 					rangDuGagnant = i;
 					++cptEnVie;
