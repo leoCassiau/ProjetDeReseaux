@@ -289,8 +289,6 @@ int i, rangDuGagnant;
             data.joueur = data.joueurs[rangClient];
             sendDatagramme(data);
 
-            
-
 		}
 
         if (data.joueurs[rangClient].absent) {
