@@ -167,11 +167,16 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	printf(" Ok.\n");
-	
+
+    bool nouveauJoueur = true;
 	//	Deroulement du jeu
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
+
+        if(nouveauJoueur && data.nbJoueurs<3) {
+            nouveauJoueur = false;
+        }
 
 		if (data.etat == enAttente||data.nbJoueurs==1) {
 			printf("En attente d'un deuxieme joueur... \n");
@@ -267,10 +272,11 @@ int i, rangDuGagnant;
 		if (data.etat == nouvellePartie) {
 			printf("\n------------- Nouvelle partie -------------\n");
             data.joueurs[rangClient].enVie = true;
+            nouveauJoueur = false;
 			data.etat = debutTour;
 		}
 
-		if (data.etat == debutTour) {
+        if (data.etat == debutTour && !nouveauJoueur) {
             data.joueurs[rangClient].coup = rien;
             if (data.joueurs[rangClient].enVie) {
 
