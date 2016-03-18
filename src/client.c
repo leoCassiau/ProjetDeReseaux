@@ -298,7 +298,9 @@ int main(int argc, char **argv) {
                 // Notifie les joueurs absents
                 if (data.joueurs[rangClient].coup == rien) {
                     
-                    data.joueurs[rangClient].absent = true;
+                    printf("Vous êtes absent, bye bye.\n");
+                    close(socket_descriptor);
+                    return 0;
                 }
             }else
                 printf("Vous etes mort, veuillez attendre la fin de la partie.\n");
@@ -307,12 +309,6 @@ int main(int argc, char **argv) {
             data.joueur = data.joueurs[rangClient];
             sendDatagramme(data);
 
-        }
-
-        if (data.joueurs[rangClient].absent) {
-            printf("Vous êtes absent, bye bye.\n");
-            //close(socket_descriptor);
-            return 0;
         }
     }
     //close(socket_descriptor);
