@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
         }
 
         // Synchronisation
-        sleep(20);
+        //sleep(10);
         for (i = 0; i < nbThreads; i++) {
             pthread_join(threads[i], NULL);
 	    printf("synchronisation\n");
