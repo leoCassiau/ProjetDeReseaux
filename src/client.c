@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
         printf(
                 "\nLa limite de %d joueurs est atteinte. Veuillez réessayer plus tard...\n",
                 NB_MAX_JOUEURS);
-
+				close(socket_descriptor);
         return 0;
     }
     printf(" Ok.\n");

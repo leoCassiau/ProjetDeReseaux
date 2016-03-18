@@ -135,7 +135,7 @@ void * nouveauClient(void * n) {
             printf("La partie est pleine \n");
         }
         // Vérifie l'état de la partie
-        if (nbJoueurs < 2) { // Attends un deuxieme joueur
+        else if (nbJoueurs < 2) { // Attends un deuxieme joueur
             result.etat = enAttente;
             printf("Envoi de l'etat enAttente. \n");
         } else if (nbJoueurs == 2) { // Debut du jeu
