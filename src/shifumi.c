@@ -59,20 +59,21 @@ bool attaque(Joueur * j1, Joueur * j2) {
 }
 
 const char* coupToString(coup c) {
-	if(c==pierre) { return "pierre";}
-	else if (c == feuille) { return "feuille";}
-	else if (c == ciseaux) { return "ciseaux";}
+	if(c==pierre) { return "Pierre ";}
+	else if (c == feuille) { return "Feuille";}
+	else if (c == ciseaux) { return "Ciseaux";}
 	else if (c == rien) { return "rien";}
 	else { return "COUP_ERROR";}
 }
 
 void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS], int nbJoueurs) {
-	printf("| RANG | PSEUDO | COUP | SCORE |\n");
-	printf("|------|--------|------|-------|\n");
+	printf(" _______________________________ \n");
+	printf("| RANG | SCORE | COUP  | PSEUDO \n");
+	printf("|------|-------|-------|--------\n");
 	int i;
 	for (i = 0; i < nbJoueurs; i++) {
-		printf("|%d|%s|%s|%d|\n", i, joueurs[i].nom,
+		printf("|    %d|      %s|%s|%d|\n", i, joueurs[i].nom,
 				coupToString(joueurs[i].coup), joueurs[i].score);
 	}
-	printf("|______|________|______|_______|\n");
+	printf("|______|_______|_______|________\n");
 }
