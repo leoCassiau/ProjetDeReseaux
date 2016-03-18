@@ -75,8 +75,8 @@ void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS], int nbJoueurs) {
 	printf("|------|-------|-------|--------\n");
 	int i;
 	for (i = 0; i < nbJoueurs; i++) {
-		printf("|    %d|      %s|%s|%d|\n", i, joueurs[i].nom,
-				coupToString(joueurs[i].coup), joueurs[i].score);
+		printf("|     %d|      %d|%s|%s\n", i, joueurs[i].score,
+				coupToString(joueurs[i].coup), joueurs[i].nom);
 	}
 	printf("|______|_______|_______|________\n");
 }

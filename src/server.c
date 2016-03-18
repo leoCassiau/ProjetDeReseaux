@@ -127,19 +127,19 @@ void * nouveauClient(void * n) {
         result.joueur=joueurs[nbJoueurs-1];
         result.joueurs[nbJoueurs-1] = joueurs[nbJoueurs-1];
         if(result.partiePleine){
-            printf("DEBUG: La partie est pleine \n");
+            printf("La partie est pleine \n");
         }
         // Vérifie l'état de la partie
         if (nbJoueurs < 2) { // Attends un deuxieme joueur
             result.etat = enAttente;
-            printf("DEBUG: Envoi de l'etat enAttente. \n");
+            printf("Envoi de l'etat enAttente. \n");
         } else if (nbJoueurs == 2) { // Debut du jeu
             result.etat = nouvellePartie;
-            printf("DEBUG: Envoi de l'etat nouvellePartie. \n");
+            printf("Envoi de l'etat nouvellePartie. \n");
             writeDatagramme(joueurs[0].socket, result);
         } else { // Affichage du tour en cours
             result.etat = finTour;
-            printf("DEBUG: Envoi de l'etat finTour. \n");
+            printf("Envoi de l'etat finTour. \n");
         }
 
         // Envoi du datagramme
@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
 	data.nbJoueurs = nbJoueurs;
 	
         for (i = 0; i < nbJoueurs; i++) {
-		printf("DEBUG joueur nom :%s\n",joueurs[i].nom);
+		//printf("DEBUG joueur nom :%s\n",joueurs[i].nom);
             if (writeDatagramme(joueurs[i].socket, data)<=0){
 				if(removeJoueur(joueurs[i])){
 				printf("DEBUG: Le joueur %s est deconnecte\n",joueurs[i].nom);

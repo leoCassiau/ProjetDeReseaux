@@ -132,14 +132,14 @@ void * nouveauClient(void * n) {
         // Vérifie l'état de la partie
         if (nbJoueurs < 2) { // Attends un deuxieme joueur
             result.etat = enAttente;
-            printf("DEBUG: Envoi de l'etat enAttente. \n");
+            printf("Envoi de l'etat enAttente. \n");
         } else if (nbJoueurs == 2) { // Debut du jeu
             result.etat = nouvellePartie;
-            printf("DEBUG: Envoi de l'etat nouvellePartie. \n");
+            printf("Envoi de l'etat nouvellePartie. \n");
             writeDatagramme(joueurs[0].socket, result);
         } else { // Affichage du tour en cours
             result.etat = finTour;
-            printf("DEBUG: Envoi de l'etat finTour. \n");
+            printf("Envoi de l'etat finTour. \n");
         }
 
         // Envoi du datagramme
@@ -162,7 +162,21 @@ void * reception(void * n) {
 	printf("Reception erronee, coup non pris en compte\n");
 
 }
+bool isSocketOpen(int sock){
+	int error = 0;
+	socklen_t len = sizeof (error);
+	int retval = getsockopt (sock, SOL_SOCKET, SO_ERROR, &error, &len);
+	
+	if (retval != 0) {
+		return false;
+	}else
 
+	if (error != 0) {
+		return false;
+	}else
+		return true;
+	
+}
 /* ----------------- main ----------------- */
 int main(int argc, char **argv) {
     gethostname(machine, 256); /* recuperation du nom de la machine */
@@ -221,14 +235,20 @@ int main(int argc, char **argv) {
         pthread_t threads[NB_MAX_JOUEURS];
         int nbThreads = 0;
         int i;
-
+		
+		
         for(i=0 ; i < nbJoueurs ; i++) {
-	    
+			
+		
+			if(isSocketOpen(joueurs[i].socket)){
 		    //joueurs[i].coup = rien;
 		    pthread_create(&t, NULL, &reception, &joueurs[i].socket);
 		    threads[nbThreads] = t;
 		    ++nbThreads;
-	    
+			}else
+				if(removeJoueur(joueurs[i])){
+					printf("Joueur supprime\n");
+				}
         }
 
         // Synchronisation
@@ -280,9 +300,11 @@ int main(int argc, char **argv) {
 	data.nbJoueurs = nbJoueurs;
 	
         for (i = 0; i < nbJoueurs; i++) {
-		printf("DEBUG joueur nom :%s\n",joueurs[i].nom);
+		//printf("DEBUG joueur nom :%s\n",joueurs[i].nom);
             if (writeDatagramme(joueurs[i].socket, data)<=0){
+				if(removeJoueur(joueurs[i])){
 				printf("DEBUG: Le joueur %s est deconnecte\n",joueurs[i].nom);
+				}
 			}
         }
     }

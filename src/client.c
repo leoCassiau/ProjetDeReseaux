@@ -119,7 +119,7 @@ Datagramme jouer(Datagramme data) {
 		}
 	} while (!fin);
   //  printf("DEBUG data.jouers[0] socket : %d \n", data.joueurs[0].socket);
-   printf("DEBUG data.jouers[0] rang : %d,  %s \n", rangClient, coupToString(data.joueurs[rangClient].coup));
+   //printf("DEBUG data.jouers[0] rang : %d,  %s \n", rangClient, coupToString(data.joueurs[rangClient].coup));
     return data;
 }
 
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 				
 		return 0;
 	}
-	
+	printf(" Ok.\n");
 	
 	//	Deroulement du jeu
 	for (;;) {
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
             if (data.joueurs[rangClient].enVie) {
 
 				// Affichage de votre coup
-				printf("%Vous avez joué : %s.\n",
+				printf("Vous avez joué : %s.\n",
                         coupToString(data.joueurs[rangClient].coup));
 
 				// Affichage du coup du défenseur
@@ -233,7 +233,7 @@ int i, rangDuGagnant;
 				}
 				++i;
 			}
-			printf("Il y a %d joueurs en vie\n",cptEnVie);
+			printf("Il y a %d joueur(s) encore dans la partie et %d joueur(s) vaincu(s) dans ce tour.\n", cptEnVie, data.nbJoueurs-cptEnVie);
 
 			// Fin de la partie ?
             if(cptEnVie < 2) {
@@ -249,7 +249,7 @@ int i, rangDuGagnant;
 
 			// Si le client gagne
             if (data.joueur.rang == data.joueurs[rangClient].rang) {
-			//	printf("BRAVO !! Vous avez gagné la partie.\n");
+							printf("BRAVO !! Vous avez gagné la partie.\n");
                 ++data.joueurs[rangClient].score;
 			}
 

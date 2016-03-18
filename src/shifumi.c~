@@ -62,15 +62,9 @@ bool attaque(Joueur * j1, Joueur * j2) {
 }
 
 const char* coupToString(coup c) {
-<<<<<<< HEAD
 	if(c==pierre) { return "Pierre ";}
 	else if (c == feuille) { return "Feuille";}
 	else if (c == ciseaux) { return "Ciseaux";}
-=======
-	if(c==pierre) { return "pierre ";}
-	else if (c == feuille) { return "feuille";}
-	else if (c == ciseaux) { return "ciseaux";}
->>>>>>> 4b77e48e82544a938be38eabae651e1ab7fc1e40
 	else if (c == rien) { return "rien";}
 	else { return "COUP_ERROR";}
 }
@@ -81,8 +75,8 @@ void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS], int nbJoueurs) {
 	printf("|------|-------|-------|--------\n");
 	int i;
 	for (i = 0; i < nbJoueurs; i++) {
-		printf("|    %d|      %s|%s|%d|\n", i, joueurs[i].nom,
-				coupToString(joueurs[i].coup), joueurs[i].score);
+		printf("|     %d|      %d|%s|%d\n", i, joueurs[i].score,
+				coupToString(joueurs[i].coup), joueurs[i].nom);
 	}
 	printf("|______|_______|_______|________\n");
 }
