@@ -274,9 +274,13 @@ int main(int argc, char **argv) {
             //pthread_cancel(threads[i]);
         }
 
-        /* if(joueurs[i].coup == rien) {
-            removeJoueur(joueurs[i]);
-        } */
+        i = 0;
+        while(i < nbJoueurs) {
+             if(joueurs[i].coup == rien) {
+                removeJoueur(joueurs[i]);
+            }
+               ++i;
+        }
         Joueur joueursQuiJoue[NB_MAX_JOUEURS];
         int nbJoueursQuiJoue = 0;
         for (i = 0; i < nbJoueurs; i++) {
