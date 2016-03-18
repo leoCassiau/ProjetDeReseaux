@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 		Datagramme data = readDatagramme();
 		
 		rangClient=data.joueur.rang;
-		printf("Rang recu: %d \n", rangClient);
+	
         if(data.etat == attendsFinTour) {
             printf("Partie en cours...\n");
         }
