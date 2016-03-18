@@ -141,13 +141,20 @@ void * nouveauClient(void * n) {
         } else if (nbJoueurs == 2) { // Debut du jeu
             result.etat = nouvellePartie;
             printf("Envoi de l'etat nouvellePartie. \n");
-            writeDatagramme(joueurs[0].socket, result);
+            Datagramme res;
+            res.etat = nouvellePartie;
+            res.nbJoueurs = nbJoueurs;
+            res.joueur=joueurs[0];
+            res.joueurs[0]=joueurs[0];
+            printf("Annonce au joueur %s , socket %d du debut de la partie\n",joueurs[0].nom, joueurs[0].socket);
+            writeDatagramme(joueurs[0].socket, res);
         } else { // Affichage du tour en cours
             result.etat = attendsFinTour;
             printf("Envoi de l'etat attendsFinTour. \n");
         }
 
         // Envoi du datagramme
+       
         writeDatagramme(joueurs[nbJoueurs-1].socket, result);//1er envoi verifie que la partie est non pleine
         writeDatagramme(joueurs[nbJoueurs-1].socket, result);
     }
