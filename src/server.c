@@ -124,7 +124,13 @@ void * nouveauClient(void * n) {
         printf("Connection avec la socket: %d \n",joueurs[nbJoueurs-1].socket);
         printf("Il y a actuellement %d joueurs \n",nbJoueurs);
         result.joueur=joueurs[nbJoueurs-1];
-        result.joueurs[nbJoueurs-1] = joueurs[nbJoueurs-1];
+
+        int i;
+        for (i = 0; i < nbJoueurs; i++) {
+            result.joueurs[i] = joueurs[i];
+        }
+        result.nbJoueurs = nbJoueurs;
+
         if(result.partiePleine){
             printf("La partie est pleine \n");
         }
@@ -137,8 +143,8 @@ void * nouveauClient(void * n) {
             printf("Envoi de l'etat nouvellePartie. \n");
             writeDatagramme(joueurs[0].socket, result);
         } else { // Affichage du tour en cours
-            result.etat = finTour;
-            printf("Envoi de l'etat finTour. \n");
+            result.etat = attendsFinTour;
+            printf("Envoi de l'etat attendsFinTour. \n");
         }
 
         // Envoi du datagramme

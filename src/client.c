@@ -29,6 +29,7 @@ char * host; /* adresse de l'hôte*/
 
 // Variables globales pour le déroulement du jeu
 int rangClient;	// Rang du client actuel
+bool joue;
 
 void sendDatagramme(Datagramme data) {
 	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
@@ -95,7 +96,6 @@ Datagramme jouer(Datagramme data) {
 		// Coup du joueur ?
 		printf("Indiquez votre coup (Pierre, Feuille ou Ciseaux) : ");
 		scanf("%255s", coup);
-		printf("\n");
 
 		// Pierre
 		if (strcmp(coup, "P") == 0 || strcmp(coup, "p") == 0
@@ -167,21 +167,25 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	printf(" Ok.\n");
-	
+
+    joue = false;
 	//	Deroulement du jeu
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
-		printf("DEBUG rang recu: %d \n",data.joueur.rang);
-		//rangClient = data.joueur.rang;
+
+
+        if(data.etat == attendsFinTour) {
+            printf("Partie en cours...\n");
+        }
+
 		if (data.etat == enAttente||data.nbJoueurs==1) {
 			printf("En attente d'un deuxieme joueur... \n");
-			data = readDatagramme();
 		}
 
 		if (data.etat == finTour) {
             afficheJoueurs(data.joueurs, data.nbJoueurs);
-            if (data.joueurs[rangClient].enVie) {
+            if (joue) {
 
 				// Affichage de votre coup
 				printf("Vous avez joué : %s.\n",
@@ -216,6 +220,7 @@ int main(int argc, char **argv) {
                 if (data.joueurs[rangClient].enVie) {
 					printf("Ouf, vous avez survécu.\n");
 				} else {
+                    joue = false;
 					printf("Arf, vous avez perdu.\n");
 				}
             }
@@ -245,7 +250,7 @@ int i, rangDuGagnant;
 			}
 		}
 
-		if (data.etat == finPartie) {
+        if (data.etat == finPartie) {
 			printf("\n--- Fin de la partie ---\n");
 
 			// Si le client gagne
@@ -268,10 +273,11 @@ int i, rangDuGagnant;
 		if (data.etat == nouvellePartie) {
 			printf("\n------------- Nouvelle partie -------------\n");
             data.joueurs[rangClient].enVie = true;
+            joue = true;
 			data.etat = debutTour;
 		}
 
-		if (data.etat == debutTour) {
+        if (data.etat == debutTour) {
             data.joueurs[rangClient].coup = rien;
             if (data.joueurs[rangClient].enVie) {
 
@@ -289,8 +295,6 @@ int i, rangDuGagnant;
             // Envoie du coup joué
             data.joueur = data.joueurs[rangClient];
             sendDatagramme(data);
-
-            
 
 		}
 

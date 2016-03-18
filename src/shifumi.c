@@ -20,7 +20,7 @@ typedef enum {
 } coup;
 
 typedef enum {
-	nouvellePartie, finPartie, debutTour, finTour, enAttente, erreur
+    nouvellePartie, finPartie, debutTour, finTour, enAttente, erreur, attendsFinTour
 } etatPartie;
 
 typedef struct {
@@ -65,12 +65,12 @@ const char* coupToString(coup c) {
 	if(c==pierre) { return "Pierre ";}
 	else if (c == feuille) { return "Feuille";}
 	else if (c == ciseaux) { return "Ciseaux";}
-	else if (c == rien) { return "rien";}
+    else if (c == rien) { return "Rien   ";}
 	else { return "COUP_ERROR";}
 }
 
 void afficheJoueurs(Joueur joueurs[NB_MAX_JOUEURS], int nbJoueurs) {
-	printf(" _______________________________ \n");
+    printf(" _______________________________\n");
 	printf("| RANG | SCORE | COUP  | PSEUDO \n");
 	printf("|------|-------|-------|--------\n");
 	int i;
