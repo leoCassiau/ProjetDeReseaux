@@ -97,26 +97,26 @@ void * jouer(void * n) {
     bool fin = false;
     do {
         // Coup du joueur ?
-        printf("Indiquez votre coup (Pierre, Feuille ou Ciseaux) : ");
+        printf("Indiquez votre coup ([p]ierre, [f]euille ou [c]iseaux) : ");
         scanf("%255s", coup);
 
         // Pierre
         if (strcmp(coup, "P") == 0 || strcmp(coup, "p") == 0
-                || strcmp(coup, "Pierre") == 0) {
+                || strcmp(coup, "pierre") == 0) {
             data->joueurs[rangClient].coup = pierre;
             fin = true;
         }
 
         // Feuille
         if (strcmp(coup, "F") == 0 || strcmp(coup, "f") == 0
-                || strcmp(coup, "Feuille") == 0) {
+                || strcmp(coup, "feuille") == 0) {
             data->joueurs[rangClient].coup = feuille;
             fin = true;
         }
 
         // Ciseaux
         if (strcmp(coup, "C") == 0 || strcmp(coup, "c") == 0
-                || strcmp(coup, "Ciseaux") == 0) {
+                || strcmp(coup, "ciseaux") == 0) {
             data->joueurs[rangClient].coup = ciseaux;
             fin = true;
         }
