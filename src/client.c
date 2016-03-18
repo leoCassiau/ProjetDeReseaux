@@ -76,6 +76,7 @@ bool sendNouveauJoueur(Joueur joueur) {
         rangClient = data.joueur.rang;
 
     return data.partiePleine;
+
 }
 
 Joueur creerJoueur(const char * pseudo) {
@@ -170,17 +171,22 @@ int main(int argc, char **argv) {
     printf(" Ok.\n");
 
     joue = false;
-    //	Deroulement du jeu
-    for (;;) {
 
-        Datagramme data = readDatagramme();
-
+	//	Deroulement du jeu
+	for (;;) {
+		
+		Datagramme data = readDatagramme();
+		
+		rangClient=data.joueur.rang;
+		printf("Rang recu: %d \n", rangClient);
         if(data.etat == attendsFinTour) {
             printf("Partie en cours...\n");
         }
-        if (data.etat == enAttente||data.nbJoueurs==1) {
-            printf("En attente d'un deuxieme joueur... \n");
-        }
+
+		if (data.etat == enAttente||data.nbJoueurs==1) {
+			printf("En attente d'un deuxieme joueur... \n");
+		}
+
 
         if (data.etat == finTour) {
             afficheJoueurs(data.joueurs, data.nbJoueurs);
