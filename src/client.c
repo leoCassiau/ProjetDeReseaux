@@ -72,7 +72,7 @@ bool sendNouveauJoueur(Joueur joueur) {
 	
 	// Recupération des informations du joueur
 	data = readDatagramme();
-    	rangClient = data.joueur.rang;
+    rangClient = data.joueur.rang;
 
 	return data.partiePleine;
 }
@@ -172,7 +172,8 @@ int main(int argc, char **argv) {
 	for (;;) {
 		
 		Datagramme data = readDatagramme();
-
+		printf("DEBUG rang recu: %d \n",data.joueur.rang);
+		//rangClient = data.joueur.rang;
 		if (data.etat == enAttente||data.nbJoueurs==1) {
 			printf("En attente d'un deuxieme joueur... \n");
 			data = readDatagramme();
