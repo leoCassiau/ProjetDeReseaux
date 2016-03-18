@@ -118,7 +118,7 @@ Datagramme jouer(Datagramme data) {
 			fin = true;
 		}
 	} while (!fin);
-  //  printf("DEBUG data.jouers[0] socket : %d \n", data.joueurs[0].socket);
+    printf("DEBUG data.jouers[0] socket : %d \n", data.joueurs[0].socket);
    printf("DEBUG data.jouers[0] rang : %d,  %s \n", rangClient, coupToString(data.joueurs[rangClient].coup));
     return data;
 }
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
 		
 		Datagramme data = readDatagramme();
 
-		if (data.etat == enAttente||data.nbJoueurs==1) {
+		if (data.etat == enAttente) {
 			printf("En attente d'un deuxieme joueur... \n");
 			data = readDatagramme();
 		}
@@ -222,10 +222,10 @@ int main(int argc, char **argv) {
 			// On compte le nombre de joueurs en vie
 			int cptEnVie = 0;
 int i, rangDuGagnant;
-			i = 0;
+			cptEnVie, i = 0;
 			while (cptEnVie < 2 && i < data.nbJoueurs) {
-				//printf("DEBUG nom : %s, enVie : %d, nbJoueur : %d, cptEnVie : %d\n",
-				//	data.joueurs[i].nom, data.joueurs[i].enVie, data.nbJoueurs, cptEnVie);
+				printf("DEBUG nom : %s, enVie : %d, nbJoueur : %d, cptEnVie : %d\n",
+					data.joueurs[i].nom, data.joueurs[i].enVie, data.nbJoueurs, cptEnVie);
 				if (data.joueurs[i].enVie) {
 					rangDuGagnant = i;
 					++cptEnVie;
@@ -257,7 +257,7 @@ int i, rangDuGagnant;
 			else {
                 printf("%s a gagné la partie !\n", data.joueur.nom);
                 printf("%s a maintenant un score de %d.\n", data.joueur.nom,
-                        data.joueur.score+1);
+                        data.joueur.score);
 			}
 
             printf("Votre score actuel est de %d.\n", data.joueurs[rangClient].score);
@@ -282,8 +282,7 @@ int i, rangDuGagnant;
                     
                     data.joueurs[rangClient].absent = true;
 				}
-            }else
-				printf("Vous etes mort, veuillez attendre la fin de la partie.\n");
+            }
 
             // Envoie du coup joué
             data.joueur = data.joueurs[rangClient];
