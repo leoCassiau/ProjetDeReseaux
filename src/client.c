@@ -90,7 +90,9 @@ Joueur creerJoueur(const char * pseudo) {
     return j;
 }
 
-Datagramme jouer(Datagramme data) {
+void * jouer(void * n) {
+    Datagramme *data = (Datagramme*) n;
+
     char coup[256];
     bool fin = false;
     do {
@@ -101,27 +103,26 @@ Datagramme jouer(Datagramme data) {
         // Pierre
         if (strcmp(coup, "P") == 0 || strcmp(coup, "p") == 0
                 || strcmp(coup, "Pierre") == 0) {
-            data.joueurs[rangClient].coup = pierre;
+            data->joueurs[rangClient].coup = pierre;
             fin = true;
         }
 
         // Feuille
         if (strcmp(coup, "F") == 0 || strcmp(coup, "f") == 0
                 || strcmp(coup, "Feuille") == 0) {
-            data.joueurs[rangClient].coup = feuille;
+            data->joueurs[rangClient].coup = feuille;
             fin = true;
         }
 
         // Ciseaux
         if (strcmp(coup, "C") == 0 || strcmp(coup, "c") == 0
                 || strcmp(coup, "Ciseaux") == 0) {
-            data.joueurs[rangClient].coup = ciseaux;
+            data->joueurs[rangClient].coup = ciseaux;
             fin = true;
         }
     } while (!fin);
   //  printf("DEBUG data.jouers[0] socket : %d \n", data.joueurs[0].socket);
    //printf("DEBUG data.jouers[0] rang : %d,  %s \n", rangClient, coupToString(data.joueurs[rangClient].coup));
-    return data;
 }
 
 int main(int argc, char **argv) {
@@ -295,7 +296,10 @@ int main(int argc, char **argv) {
             if (data.joueurs[rangClient].enVie) {
 
                 // Le joueur joue avec un timeout de 10sc, le temps la réponse du joueur
-                data = jouer(data);
+                pthread_t t;
+                pthread_create(&t, NULL, &jouer, &data);
+                sleep(15);
+                pthread_cancel(t);
 
                 // Notifie les joueurs absents
                 if (data.joueurs[rangClient].coup == rien) {
