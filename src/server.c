@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
 			
 		
 			if(isSocketOpen(joueurs[i].socket)){
-		    //joueurs[i].coup = rien;
+		    joueurs[i].coup = rien;
 		    pthread_create(&t, NULL, &reception, &joueurs[i].socket);
 		    threads[nbThreads] = t;
 		    ++nbThreads;
@@ -270,7 +270,7 @@ int main(int argc, char **argv) {
         //sleep(10);
         for (i = 0; i < nbThreads; i++) {
             pthread_join(threads[i], NULL);
-	    printf("synchronisation\n");
+	    printf("Synchronisation\n");
             //pthread_cancel(threads[i]);
         }
 
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
 					if (nbJoueurs<2){
 						Datagramme dataOsef=readDatagramme(joueurs[0].socket);
 					}
-				printf("DEBUG: Joueur supprime\n");
+				printf("Joueur supprime\n");
 				}
 			}
         }
