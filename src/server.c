@@ -144,8 +144,8 @@ void * nouveauClient(void * n) {
             printf("Envoi de l'etat nouvellePartie. \n");
             writeDatagramme(joueurs[0].socket, result);
         } else { // Affichage du tour en cours
-            result.etat = finTour;
-            printf("Envoi de l'etat finTour. \n");
+            result.etat = attendsFinTour;
+            printf("Envoi de l'etat attendsFinTour. \n");
         }
 
         // Envoi du datagramme
