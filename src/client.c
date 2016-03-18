@@ -185,6 +185,7 @@ int main(int argc, char **argv) {
 
 		if (data.etat == enAttente||data.nbJoueurs==1) {
 			printf("En attente d'un deuxieme joueur... \n");
+            data = readDatagramme();
 		}
 
 
