@@ -32,6 +32,10 @@ char machine[256]; /* nom de la machine locale */
 int nbJoueurs = 0;
 Joueur joueurs[NB_MAX_JOUEURS];
 
+/**
+ * @brief Ajoute le joueur dans le tableau joueurs[NB_MAX_JOUEURS]
+ * @param joueur un Joueur
+ */
 /* ----------------- fonctions du tableau joueurs ----------------- */
 bool addJoueur(Joueur joueur) {
     // Retourne faux si le nombre de joueurs max est atteint
@@ -47,6 +51,11 @@ bool addJoueur(Joueur joueur) {
     return true;
 }
 
+/**
+ * @brief Retire le joueur du tableau de joueurs
+ * @param j un Joueur
+ * @return un booléen à vrai si l'opération est réussie, faux sinon
+ */
 bool removeJoueur(Joueur j) {
     // Le joueur est identifié par son rang, càd son indice dans le tableau joueurs
     // Si son rang est supérieur à la taille de joueurs, alors c'est une erreur
@@ -64,6 +73,11 @@ bool removeJoueur(Joueur j) {
     return true;
 }
 
+/**
+ * @brief Reçoit un datagramme depuis le client
+ * @param socket un int identifiant une socket client
+ * @return Le Datagramme reçu
+ */
 /*  ----------------- fonctions pour communiquer avec le client  ----------------- */
 Datagramme readDatagramme(int  socket) {
 
@@ -86,7 +100,12 @@ Datagramme readDatagramme(int  socket) {
 }
 
 
-
+/**
+ * @brief Envoie un Datagramme à un client
+ * @param socket_descriptor l'identifiant de la socket client
+ * @param data le Datagramme à envoyer
+ * @return 0 ou -1 en cas d'erreur, 1 sinon
+ */
 int writeDatagramme(int socket_descriptor, Datagramme data) {
 	int longueur=send(socket_descriptor, &data, sizeof(Datagramme),0);
 	if ((longueur <0)) {
@@ -99,6 +118,11 @@ int writeDatagramme(int socket_descriptor, Datagramme data) {
 	else return 1;
 }
 
+/**
+ * @brief Accepte la connection d'un client, reçoit le Joueur envoyé, ajout du client dans le tableau si possible,
+ * envoi d'un datagramme informant le client de l'ajout et de l'état de la partie
+ * @param void * n, nécessaire pour les threads, non utilisé
+ */
 void * nouveauClient(void * n) {
 
     for(;;) {
@@ -160,6 +184,12 @@ void * nouveauClient(void * n) {
     }
 }
 
+/**
+ * @brief Reception d'un datagramme, si il est correct: mise à jour du joueur en question,
+ * sinon message de debug
+ * @param void * n: en réalité un int identifiant de socket client
+ * @return Le Datagramme reçu
+ */
 void * reception(void * n) {
     // Reception du datagramme
     int *  nouv_socket_descriptor = (int*) n;
@@ -174,6 +204,12 @@ void * reception(void * n) {
 	printf("Reception erronee, coup non pris en compte\n");
 
 }
+
+/**
+ * @brief Teste la validité d'une socket
+ * @param sock un int identifiant une socket client
+ * @return true si la socket est ouverte, false sinon
+ */
 bool isSocketOpen(int sock){
 	int error = 0;
 	socklen_t len = sizeof (error);
@@ -189,6 +225,14 @@ bool isSocketOpen(int sock){
 		return true;
 	
 }
+
+/**
+ * @brief Fonction main du server, lance les thread d'ajout de nouveaux joueurs
+ * et de réception de datagramme, attends les réponses des clients, joue un tour et envoie les résultats aux clients
+ * @param int argc (par défaut)
+ * @param char **argv (par défaut)
+ * @return int (par défaut)
+ */
 /* ----------------- main ----------------- */
 int main(int argc, char **argv) {
     gethostname(machine, 256); /* recuperation du nom de la machine */
